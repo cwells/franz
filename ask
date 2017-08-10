@@ -1,0 +1,337 @@
+#!/bin/env python
+from __future__ import absolute_import, print_function
+
+import re
+import operator as op
+import click
+from functools import partial
+from decorator import decorator
+from pprint import pprint
+from lark import Lark, Tree, InlineTransformer
+
+try:
+    input = raw_input
+except NameError:
+    pass
+
+typedecl = {
+    'int':  int,
+    'dec':  float,
+    'str':  str,
+    'list': list,
+    'dict': dict
+}
+
+
+class Atomize(InlineTransformer):
+    integer = int
+    decimal = float
+    string  = lambda _, v: v[1:-1]
+
+    def params(self, *args):
+        sig = {}
+        iargs = iter(args)
+        for param in iargs:
+            if isinstance(param, Tree): param = param.children[0].value
+            paramtype = iargs.next()
+            sig[param] = typedecl[paramtype]
+        return sig
+
+
+class Interpreter(object):
+    def __init__(self, namespace=None):
+        self.namespace = namespace if namespace else {}
+
+    #
+    # eval
+    #
+    def eval(self, ast, namespace=None):
+        if not hasattr(ast, 'data'):
+            return ast
+
+        if hasattr(self, ast.data):
+            if namespace is not None:
+                _ns = self.namespace
+                self.namespace = namespace
+            retval = getattr(self, ast.data)(ast.children)
+            if namespace is not None:
+                self.namespace = _ns
+            return retval
+        else:
+            print("Parse error, unknown token: {}".format(ast.data))
+
+    #
+    # builtin functions
+    #
+    def fn_print(self, msg):
+        retval = str(msg).format(**self.namespace).replace('\\n', '\n')
+        print(retval, end='')
+        return retval
+
+    #
+    # token actions (alphabetical)
+    #
+    def add(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a + b
+
+    def array(self, ast):
+        retval = [ self.eval(b) if isinstance(b, Tree) else b for b in ast ]
+        return retval
+
+    def arrayitem(self, ast):
+        return [ self.eval(branch) if isinstance(branch, Tree) else branch for branch in ast ]
+
+    def assign(self, ast):
+        var, val = ast
+        self.namespace[var.value] = self.eval(val)
+        return self.namespace[var.value]
+
+    def assoc(self, ast):
+        retval = {}
+        branch = iter(ast)
+        for key in branch:
+            val = next(branch)
+            if isinstance(val, Tree): val = self.eval(val)
+            retval[key.value] = val
+        return retval
+
+    def block(self, ast):
+        retval = None
+        for branch in ast:
+            retval = self.eval(branch)
+        return retval
+
+    def boolean(self, ast):
+        bools = { 'or': op.or_, 'and': op.and_ }
+
+        branch = ast.pop(0)
+        retval = self.eval(branch) if isinstance(branch, Tree) else branch
+        while ast:
+            logop, val = ast.pop(0), ast.pop(0)
+            val = self.eval(val) if isinstance(val, Tree) else val
+            retval = bools[logop.value](retval, val)
+        return retval
+
+    def call(self, ast):
+        name, args = ast
+        if isinstance(args, Tree): args = self.eval(args)
+        args = dict(args)
+
+        if name in self.namespace: # call user-defined functions
+            return self.namespace[name](**args)
+
+        fn = 'fn_' + name
+        try:
+            return getattr(self, fn)(**args)
+        except AttributeError:
+            print("Unknown function `{}`".format(name))
+            exit(1)
+
+    def casecond(self, ast):
+        var = ast[0]
+        tree = iter(ast[1:])
+        retval = None
+
+        for match in tree:
+            try:
+                block = tree.next()
+            except StopIteration: # else clause
+                retval = self.eval(match) if isinstance(match, Tree) else match
+                return retval
+
+            match = self.eval(match) if isinstance(match, Tree) else match
+            match = getattr(match, 'value', match)
+            if isinstance(match, str) and match[0] == match[-1] == '/':
+                if isinstance(self.namespace[var], str) and re.match(match[1:-1], self.namespace[var]):
+                    retval = self.eval(block) if isinstance(block, Tree) else block
+                    break
+            else:
+                if match == self.namespace[var]:
+                    retval = self.eval(block) if isinstance(block, Tree) else block
+                    break
+
+        return retval
+
+    def cmp_eq(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a == b
+
+    def cmp_gt(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a > b
+
+    def cmp_gteq(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a >= b
+
+    def cmp_lt(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a < b
+
+    def cmp_lteq(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a <= b
+
+    def cmp_neq(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a != b
+
+    def div(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a / b
+
+    def false(self, ast):
+        return False
+
+    def forloop(self, ast):
+        var, irange, block = ast
+        var = var.value
+        irange = self.eval(irange)
+        retval = None
+
+        for self.namespace[var] in irange:
+            retval = self.eval(block)
+
+        return retval
+
+    def function(self, ast):
+        def execute(signature, block, *args, **kwargs):
+            def validate(signature, arguments):
+                try:
+                    assert set(signature) == set(arguments)
+                except AssertionError, e:
+                    print("\nIncorrect arguments to function. {}".format(e))
+                    exit(1)
+
+                try:
+                    castargs = { k:signature[k](v) for (k, v) in arguments.items() }
+                except ValueError, e:
+                    print("\nInvalid type passed to function. {}".format(e))
+                    exit(1)
+
+                return castargs
+
+            kwargs = validate(signature, kwargs)
+            namespace = {}
+            namespace.update(self.namespace)
+            namespace.update(kwargs)
+
+            interpreter = Interpreter(namespace=namespace)
+            return interpreter.eval(block) if isinstance(block, Tree) else block.value
+
+        signature, block = ast
+        return partial(execute, signature, block)
+
+    def ifcond(self, ast):
+        if self.eval(ast[0]):
+            return self.eval(ast[1])
+        elif len(ast) > 1:
+            return self.eval(ast[2])
+
+    def irange(self, ast):
+        try:
+            start, end = ast
+            step = 1
+        except ValueError:
+            start, end, step = ast
+
+        if isinstance(start, Tree): start = self.eval(start)
+        if isinstance(end, Tree): end = self.eval(end)
+        if isinstance(step, Tree): step = self.eval(step)
+
+        return range(start, end + 1, step)
+
+    def mul(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a * b
+
+    def name(self, ast):
+        return self.namespace[ast[0].value]
+
+    def nil(self, ast):
+        return None
+
+    def program(self, ast):
+        retval = None
+        for branch in ast:
+            retval = self.eval(branch)
+        return retval
+
+    def regex(self, ast):
+        print(ast)
+        raise SystemExit
+
+    def sub(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a - b
+
+    def true(self, ast):
+        return True
+
+    def x__del__(self):
+        pprint(self.namespace)
+
+
+@click.command()
+@click.argument('program', type=click.Path(exists=True), required=False, default=None)
+@click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/ask.g')
+def main(program, grammar):
+    parser = Lark(
+        open(grammar).read(),
+        start       = 'program',
+        parser      = 'lalr',
+        transformer = Atomize()
+    )
+    interpreter = Interpreter()
+
+    if program is not None:
+        ast = parser.parse(open(program).read())
+        interpreter.eval(ast)
+        raise SystemExit
+
+    # naive repl
+    while True:
+        try:
+            s = input('> ')
+        except EOFError:
+            break
+        if not s:
+            continue
+
+        try:
+            ast = parser.parse(s)
+        except Exception, e:
+            print(e)
+            continue
+
+        try:
+            print(interpreter.eval(ast))
+        except Exception, e:
+            print(e)
+            continue
+
+    # print(ast.pretty())
+
+if __name__ == '__main__':
+    main()
