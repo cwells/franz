@@ -7,22 +7,23 @@
      | forloop
      | whileloop
      | irange
-     | array
      | function
      | "{" expr* "}"     -> block
      | expr "+" expr     -> add
-     | array "+" array   -> add
      | assertion
      | tryrescue
-//     | casecond
+//     | array
+//     | array "+" array   -> add
+
+?assign: name "=" expr
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
 ?function: "fn" "(" signature* ")" expr              -> function
 ?signature: (name ":" name ("," name ":" name)*)     -> signature
 
-?array: "[" arrayitem* "]"
-?arrayitem: expr ("," expr)*
+//?array: "[" arrayitem* "]"
+//?arrayitem: expr ("," expr)*
 
 ?call: name "(" assoc* ")"
 ?assoc: name ":" expr ("," name ":" expr)*
@@ -31,48 +32,43 @@
 ?forloop: "for" name "in" expr expr                  -> forloop
 ?ifcond: "if" boolean expr [ "else" expr ]           -> ifcond
 ?whileloop: "while" boolean expr                     -> whileloop
-
-//?casecond: "case" name "is" "{" (regex|expr) expr ((regex|expr) expr)* "}" [ "else" expr ]
-//?regex: /\/[^\/]+?\//
-
-?assign: name "=" expr
-
 ?assertion: "assert" boolean                         -> assertion
 
 ?boolean: cmp ((AND|OR) cmp)*
 
 ?cmp: term
-    | term "<" term     -> cmp_lt
-    | term ">" term     -> cmp_gt
-    | term "<=" term    -> cmp_lteq
-    | term ">=" term    -> cmp_gteq
-    | term "==" term    -> cmp_eq
-    | term "<>" term    -> cmp_neq
+    | cmp "<" term       -> cmp_lt
+    | cmp ">" term       -> cmp_gt
+    | cmp "<=" term      -> cmp_lteq
+    | cmp ">=" term      -> cmp_gteq
+    | cmp "==" term      -> cmp_eq
+    | cmp "<>" term      -> cmp_neq
 
 ?term: factor
-    | term "+" factor   -> add
-    | term "-" factor   -> sub
+    | term "+" factor    -> add
+    | term "-" factor    -> sub
 
 ?factor: pow
-    | factor "*" pow    -> mul
-    | factor "/" pow    -> div
-    | factor "//" pow   -> floor
-    | factor "%" pow    -> mod
+    | factor "*" pow     -> mul
+    | factor "/" pow     -> div
+    | factor "//" pow    -> floor
+    | factor "%" pow     -> mod
 
 ?pow: atom
-    | pow "^" atom      -> pow
+    | pow "^" atom       -> pow
 
-?atom: INTEGER          -> integer
-    | DECIMAL           -> decimal
-    | name              -> name
-    | STRING            -> string
-    | "-" atom          -> negation
-    | "true"            -> true
-    | "false"           -> false
-    | "nil"             -> nil
-    | "[" expr "]"      -> array
+?atom: INTEGER           -> integer
+    | DECIMAL            -> decimal
+    | name               -> name
+    | STRING             -> string
+    | "-" atom           -> negation
+    | "true"             -> true
+    | "false"            -> false
+    | "nil"              -> nil
+    | "[" arrayitem* "]" -> array
     | "(" expr ")"
 
+?arrayitem: expr ("," expr)* -> arrayitem
 ?name: NAME
 
 COMMENT: /\#[^\n]*/

@@ -7,7 +7,7 @@ import click
 from functools import partial
 from decorator import decorator
 from pprint import pprint
-
+from copy import copy
 from lark import Lark, Tree, InlineTransformer
 from lark.lexer import Token
 
@@ -29,6 +29,8 @@ class Atomize(InlineTransformer):
     integer = int
     decimal = float
     string  = lambda _, v: v[1:-1]
+    true    = lambda _: True
+    false   = lambda _: False
 
     def signature(self, *args):
         sig = {}
@@ -81,18 +83,21 @@ class Interpreter(object):
         return a + b
 
     def array(self, ast):
-        retval = [ self.eval(b) if isinstance(b, Tree) else b for b in ast ]
+        retval = []
+        for branch in ast:
+            if isinstance(branch, Tree): branch = self.eval(branch)
+            retval.extend(branch)
         return retval
 
     def arrayitem(self, ast):
-        return [ self.eval(branch) if isinstance(branch, Tree) else branch for branch in ast ]
+        return [ self.eval(b) if isinstance(b, Tree) else b for b in ast ]
 
     def assertion(self, ast):
         condition = self.boolean(ast)
         try:
             assert condition
         except AssertionError, e:
-            print("Assertion failed {}".format(e))
+            print("Assertion failed {} {}".format(e, ast))
             exit(1)
         return condition
 
@@ -118,7 +123,7 @@ class Interpreter(object):
 
     def boolean(self, ast):
         bools = { 'or': op.or_, 'and': op.and_ }
-
+        ast = copy(ast)
         branch = ast.pop(0)
         retval = self.eval(branch) if isinstance(branch, Tree) else branch
         while ast:
@@ -141,31 +146,6 @@ class Interpreter(object):
         except AttributeError:
             print("Unknown function `{}`".format(name))
             exit(1)
-
-    def casecond(self, ast):
-        var = ast[0]
-        tree = iter(ast[1:])
-        retval = None
-
-        for match in tree:
-            try:
-                block = tree.next()
-            except StopIteration: # else clause
-                retval = self.eval(match) if isinstance(match, Tree) else match
-                return retval
-
-            match = self.eval(match) if isinstance(match, Tree) else match
-            match = getattr(match, 'value', match)
-            if isinstance(match, str) and match[0] == match[-1] == '/':
-                if isinstance(self.namespace[var], str) and re.match(match[1:-1], self.namespace[var]):
-                    retval = self.eval(block) if isinstance(block, Tree) else block
-                    break
-            else:
-                if match == self.namespace[var]:
-                    retval = self.eval(block) if isinstance(block, Tree) else block
-                    break
-
-        return retval
 
     def cmp_eq(self, ast):
         a, b = ast
@@ -208,9 +188,6 @@ class Interpreter(object):
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a / b
-
-    def false(self, ast):
-        return False
 
     def floor(self, ast):
         a, b = ast
@@ -320,9 +297,6 @@ class Interpreter(object):
         if isinstance(b, Tree): b = self.eval(b)
         return a - b
 
-    def true(self, ast):
-        return True
-
     def tryrescue(self, ast):
         try:
             retval = self.eval(ast[0])
@@ -334,7 +308,6 @@ class Interpreter(object):
         return retval
 
     def whileloop(self, ast):
-        # print("whileloop:ast", ast)
         condition, block = ast
         retval = None
         while self.eval(condition):
@@ -348,7 +321,8 @@ class Interpreter(object):
 @click.command()
 @click.argument('program', type=click.Path(exists=True), required=False, default=None)
 @click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/ask.g')
-def main(program, grammar):
+@click.option('--dump-tree', '-d', is_flag=True)
+def main(program, grammar, dump_tree):
     parser = Lark(
         open(grammar).read(),
         start       = 'program',
@@ -360,6 +334,8 @@ def main(program, grammar):
     if program is not None:
         ast = parser.parse(open(program).read())
         interpreter.eval(ast)
+
+        if dump_tree: print(ast.pretty())
         raise SystemExit
 
     # naive repl
@@ -383,7 +359,6 @@ def main(program, grammar):
             print(e)
             continue
 
-    # print(ast.pretty())
 
 if __name__ == '__main__':
     main()

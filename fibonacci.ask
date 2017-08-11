@@ -5,7 +5,7 @@
 
 fibonacci-sequence! = fn (start: int, end: int) {
     fibonacci-number! = fn (nth: int) {
-        if nth < 2
+        if nth < 2 and true
             nth
         else
             fibonacci-number!(nth: nth - 1) + fibonacci-number!(nth: nth - 2)
@@ -17,6 +17,8 @@ fibonacci-sequence! = fn (start: int, end: int) {
 }
 
 sequence = fibonacci-sequence!(start: 1, end: 20)
+
+assert sequence == [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765 ]
 
 print(msg: sequence)
 print(msg: "\n")
