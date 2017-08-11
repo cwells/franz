@@ -1,0 +1,57 @@
+#
+# Gauss–Legendre algorithm
+#
+
+calculate-square-root = fn (number:int, digits:int, add:int) {
+    # Start with 1, followed by (digits + add) zeros.
+    square-root = 1 * (10 ^ (digits + add))
+    # Calculate next square root approximation of the number.
+    next-square-root = calculate-next-square-root(number: number, square-root: square-root)
+    while (next-square-root <> square-root) {
+        # Replace square root with next square root.
+        square-root = next-square-root
+        # Calculate next square root approximation of the number.
+        next-square-root = calculate-next-square-root(number: number, square-root: square-root)
+    }
+    square-root
+}
+
+calculate-next-square-root = fn (number:int, square-root:int)
+    ((number / square-root) + square-root) / 2
+
+calculate-next-pi = fn (a:int, b:int, t:int, digits:int, add:int)
+    ((10 ^ (digits + add)) * ((a + b) ^ 2)) / (4 * t)
+
+calculate-pi = fn (digits:int) {
+    add = 500
+    a = 10 ^ (digits + add)
+    b = calculate-square-root(number: (10 ^ ((digits + add) * 2)) / 2, digits: digits, add: add)
+    t = (10 ^ ((digits + add) * 2)) / 4
+    p = 1
+    pi = -1 # pi must be different than next-pi
+    next-pi = calculate-next-pi(a: a, b: b, t: t, digits: digits, add: add)
+
+    n = 0
+    while (next-pi <> pi) {
+        pi = next-pi
+        next-a = (a + b) / 2
+        next-b = calculate-square-root(number: a * b, digits: digits, add: add)
+        next-t = t - (p * ((a - next-a) ^ 2))
+        next-p = 2 * p
+        a = next-a
+        b = next-b
+        t = next-t
+        p = next-p
+        next-pi = calculate-next-pi(
+            a: a,
+            b: b,
+            t: t,
+            digits: digits,
+            add: add
+        )
+        n = n + 1
+    }
+}
+
+result = calculate-pi(digits: 5000)
+print(msg: "result: {result}\n")

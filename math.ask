@@ -1,0 +1,22 @@
+#
+# test math operators and order of operations
+#
+
+print(msg: "Testing math operators and order of operations...\n")
+errors = 0
+
+assert 1 + 2 * 3 == 7
+
+assert (1 + 2) * 3 == 9
+
+assert (3 * 3) ^ 2 == 81
+
+assert 3 * 3 ^ 2 == 27
+
+assert 4 * (3 + 3) == 24
+
+assert 60 % 21 / 2 == 9
+
+assert 63 % (21 / 2) == 3
+
+print(msg: "{errors} errors\n")

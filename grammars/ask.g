@@ -5,16 +5,21 @@
      | call
      | ifcond
      | forloop
+     | whileloop
      | irange
      | array
      | function
      | "{" expr* "}"     -> block
      | expr "+" expr     -> add
      | array "+" array   -> add
+     | assertion
+     | tryrescue
 //     | casecond
 
-?function: "fn" "(" params* ")" expr
-?params: (arrayitem ":" name ("," arrayitem ":" name)*)    -> params
+?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
+
+?function: "fn" "(" signature* ")" expr              -> function
+?signature: (name ":" name ("," name ":" name)*)     -> signature
 
 ?array: "[" arrayitem* "]"
 ?arrayitem: expr ("," expr)*
@@ -22,16 +27,17 @@
 ?call: name "(" assoc* ")"
 ?assoc: name ":" expr ("," name ":" expr)*
 
-?irange: term "to" term [ "step" term ]     -> irange
-
-?forloop: "for" name "in" expr expr
-
-?ifcond: "if" boolean expr [ "else" expr ]
+?irange: term "to" term [ "step" term ]              -> irange
+?forloop: "for" name "in" expr expr                  -> forloop
+?ifcond: "if" boolean expr [ "else" expr ]           -> ifcond
+?whileloop: "while" boolean expr                     -> whileloop
 
 //?casecond: "case" name "is" "{" (regex|expr) expr ((regex|expr) expr)* "}" [ "else" expr ]
 //?regex: /\/[^\/]+?\//
 
 ?assign: name "=" expr
+
+?assertion: "assert" boolean                         -> assertion
 
 ?boolean: cmp ((AND|OR) cmp)*
 
@@ -47,9 +53,14 @@
     | term "+" factor   -> add
     | term "-" factor   -> sub
 
-?factor: atom
-    | factor "*" atom   -> mul
-    | factor "/" atom   -> div
+?factor: pow
+    | factor "*" pow    -> mul
+    | factor "/" pow    -> div
+    | factor "//" pow   -> floor
+    | factor "%" pow    -> mod
+
+?pow: atom
+    | pow "^" atom      -> pow
 
 ?atom: INTEGER          -> integer
     | DECIMAL           -> decimal

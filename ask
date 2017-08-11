@@ -7,7 +7,9 @@ import click
 from functools import partial
 from decorator import decorator
 from pprint import pprint
+
 from lark import Lark, Tree, InlineTransformer
+from lark.lexer import Token
 
 try:
     input = raw_input
@@ -28,12 +30,13 @@ class Atomize(InlineTransformer):
     decimal = float
     string  = lambda _, v: v[1:-1]
 
-    def params(self, *args):
+    def signature(self, *args):
         sig = {}
         iargs = iter(args)
         for param in iargs:
-            if isinstance(param, Tree): param = param.children[0].value
             paramtype = iargs.next()
+            if isinstance(param, Tree): param = param.children[0].value
+            elif isinstance(param, Token): param = param.value
             sig[param] = typedecl[paramtype]
         return sig
 
@@ -83,6 +86,15 @@ class Interpreter(object):
 
     def arrayitem(self, ast):
         return [ self.eval(branch) if isinstance(branch, Tree) else branch for branch in ast ]
+
+    def assertion(self, ast):
+        condition = self.boolean(ast)
+        try:
+            assert condition
+        except AssertionError, e:
+            print("Assertion failed {}".format(e))
+            exit(1)
+        return condition
 
     def assign(self, ast):
         var, val = ast
@@ -200,6 +212,12 @@ class Interpreter(object):
     def false(self, ast):
         return False
 
+    def floor(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a // b
+
     def forloop(self, ast):
         var, irange, block = ast
         var = var.value
@@ -217,7 +235,7 @@ class Interpreter(object):
                 try:
                     assert set(signature) == set(arguments)
                 except AssertionError, e:
-                    print("\nIncorrect arguments to function. {}".format(e))
+                    print("\nIncorrect arguments to function. {} {}".format(signature, arguments))
                     exit(1)
 
                 try:
@@ -236,7 +254,11 @@ class Interpreter(object):
             interpreter = Interpreter(namespace=namespace)
             return interpreter.eval(block) if isinstance(block, Tree) else block.value
 
-        signature, block = ast
+        try:
+            signature, block = ast
+        except ValueError:
+            block = ast
+            signature = {}
         return partial(execute, signature, block)
 
     def ifcond(self, ast):
@@ -258,6 +280,12 @@ class Interpreter(object):
 
         return range(start, end + 1, step)
 
+    def mod(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a % b
+
     def mul(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
@@ -269,6 +297,12 @@ class Interpreter(object):
 
     def nil(self, ast):
         return None
+
+    def pow(self, ast):
+        a, b = ast
+        if isinstance(a, Tree): a = self.eval(a)
+        if isinstance(b, Tree): b = self.eval(b)
+        return a ** b
 
     def program(self, ast):
         retval = None
@@ -288,6 +322,24 @@ class Interpreter(object):
 
     def true(self, ast):
         return True
+
+    def tryrescue(self, ast):
+        try:
+            retval = self.eval(ast[0])
+        except:
+            retval = self.eval(ast[1])
+        else:
+            if len(ast) == 3:
+                retval = self.eval(ast[2])
+        return retval
+
+    def whileloop(self, ast):
+        # print("whileloop:ast", ast)
+        condition, block = ast
+        retval = None
+        while self.eval(condition):
+            retval = self.eval(block)
+        return retval
 
     def x__del__(self):
         pprint(self.namespace)
