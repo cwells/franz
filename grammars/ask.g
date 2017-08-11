@@ -12,8 +12,6 @@
      | expr "+" expr     -> add
      | assertion
      | tryrescue
-//     | array
-//     | array "+" array   -> add
 
 ?assign: name "=" expr
 
@@ -21,9 +19,6 @@
 
 ?function: "fn" "(" signature* ")" expr              -> function
 ?signature: (name ":" name ("," name ":" name)*)     -> signature
-
-//?array: "[" arrayitem* "]"
-//?arrayitem: expr ("," expr)*
 
 ?call: name "(" assoc* ")"
 ?assoc: name ":" expr ("," name ":" expr)*
