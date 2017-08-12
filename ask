@@ -89,18 +89,12 @@ class Interpreter(object):
     #
     # eval
     #
-    def eval(self, ast, namespace=None):
+    def eval(self, ast):
         if not hasattr(ast, 'data'):
             return ast
 
         if hasattr(self, ast.data):
-            if namespace is not None:
-                _ns = self.namespace
-                self.namespace = namespace
-            retval = getattr(self, ast.data)(ast.children)
-            if namespace is not None:
-                self.namespace = _ns
-            return retval
+            return getattr(self, ast.data)(ast.children)
         else:
             print("Parse error, unknown token: {}".format(ast.data))
 
@@ -108,7 +102,7 @@ class Interpreter(object):
     # builtin functions
     #
     fn_print = PrintFunction(signature = [ ('msg', typedecl['str']) ], code = print)
-    fn_len = LenFunction(signature = [ ('var', typedecl['any']) ], code = len)
+    fn_len   = LenFunction(signature   = [ ('var', typedecl['any']) ], code = len)
 
     #
     # token actions (alphabetical)
