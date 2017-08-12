@@ -8,18 +8,22 @@ fibonacci-sequence! = fn (start: int, end: int) {
         if nth < 2
             nth
         else
-            fibonacci-number!(nth: nth - 1) + fibonacci-number!(nth: nth - 2)
+            fibonacci-number!(nth - 1) + fibonacci-number!(nth - 2)
     }
 
     retval = []
     for i in start to end
-        retval = retval + [ fibonacci-number!(nth: i) ]
+        retval = retval + [ fibonacci-number!(i) ]
 }
 
 sequence = fibonacci-sequence!(start: 1, end: 20)
 
-assert sequence == [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765 ]
+print("{sequence}\n")
 
-print(msg: sequence)
-print(msg: "\n")
+try
+    assert sequence == [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765 ]
+rescue
+    print("Test failed!\n")
+else
+    print("Test passed!\n")
 

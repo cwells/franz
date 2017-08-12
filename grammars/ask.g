@@ -1,43 +1,46 @@
 ?program: expr*
 
-?expr: boolean
+?expr: cmp
      | assign
-     | call
+     | assoc
      | ifcond
      | forloop
      | whileloop
      | irange
-     | function
+     | funcdef
      | "{" expr* "}"     -> block
      | expr "+" expr     -> add
      | assertion
      | tryrescue
+     | yield_expr
+     | return_expr
 
 ?assign: name "=" expr
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
-?function: "fn" "(" signature* ")" expr              -> function
+?funcdef: ("fn"|"ⲗ") "(" signature* ")" expr         -> funcdef
 ?signature: (name ":" name ("," name ":" name)*)     -> signature
 
-?call: name "(" assoc* ")"
-?assoc: name ":" expr ("," name ":" expr)*
+?assoc: (name|string) ":" expr                       -> assoc
 
-?irange: term "to" term [ "step" term ]              -> irange
+?irange: expr "to" expr [ "step" expr ]              -> irange
 ?forloop: "for" name "in" expr expr                  -> forloop
-?ifcond: "if" boolean expr [ "else" expr ]           -> ifcond
-?whileloop: "while" boolean expr                     -> whileloop
-?assertion: "assert" boolean                         -> assertion
+?ifcond: "if" expr expr [ "else" expr ]              -> ifcond
+?whileloop: "while" expr expr                        -> whileloop
+?assertion: "assert" expr                            -> assertion
+?yield_expr: "yield" expr                            -> yield_expr
+?return_expr: "return" expr                          -> return_expr
 
-?boolean: cmp ((AND|OR) cmp)*
 
 ?cmp: term
-    | cmp "<" term       -> cmp_lt
-    | cmp ">" term       -> cmp_gt
-    | cmp "<=" term      -> cmp_lteq
-    | cmp ">=" term      -> cmp_gteq
-    | cmp "==" term      -> cmp_eq
-    | cmp "<>" term      -> cmp_neq
+    | cmp ("and"|"or") term -> cmp_log
+    | cmp "<" term          -> cmp_lt
+    | cmp ">" term          -> cmp_gt
+    | cmp "<=" term         -> cmp_lteq
+    | cmp ">=" term         -> cmp_gteq
+    | cmp "==" term         -> cmp_eq
+    | cmp "<>" term         -> cmp_neq
 
 ?term: factor
     | term "+" factor    -> add
@@ -55,16 +58,20 @@
 ?atom: INTEGER           -> integer
     | DECIMAL            -> decimal
     | name               -> name
-    | STRING             -> string
+    | string             -> string
     | "-" atom           -> negation
     | "true"             -> true
     | "false"            -> false
     | "nil"              -> nil
+    | name "(" args* ")" -> call
     | "[" arrayitem* "]" -> array
     | "(" expr ")"
 
+?args: expr ("," expr)*      -> args
 ?arrayitem: expr ("," expr)* -> arrayitem
+
 ?name: NAME
+?string: STRING
 
 COMMENT: /\#[^\n]*/
 NAME: ( LETTER | "@" LETTER) ("_"|"-"|"?"|"!"|LETTER|DIGIT )*

@@ -1,4 +1,5 @@
-#!/bin/env python
+#!/bin/env python3
+
 from __future__ import absolute_import, print_function
 
 import re
@@ -17,30 +18,57 @@ except NameError:
     pass
 
 typedecl = {
-    'int':  int,
-    'dec':  float,
-    'str':  str,
-    'list': list,
-    'dict': dict
+    'int':   int,
+    'float': float,
+    'str':   str,
+    'list':  list,
+    'dict':  dict,
+    'bool':  bool,
+    'any':   lambda v: v
 }
 
 
 class Atomize(InlineTransformer):
     integer = int
     decimal = float
-    string  = lambda _, v: v[1:-1]
+    string  = lambda _, v: str(v[1:-1] if v[0] == v[-1] == '"' else v)
     true    = lambda _: True
     false   = lambda _: False
 
     def signature(self, *args):
-        sig = {}
+        sig = []
         iargs = iter(args)
         for param in iargs:
-            paramtype = iargs.next()
+            paramtype = next(iargs)
             if isinstance(param, Tree): param = param.children[0].value
             elif isinstance(param, Token): param = param.value
-            sig[param] = typedecl[paramtype]
+            sig.append((param, typedecl.get(paramtype, None)))
         return sig
+
+
+class Function(object):
+    def __init__(self, signature, code):
+        self.signature = signature
+        self.code = code
+
+    def __call__(self, ns, name, *args, **kwargs):
+        namespace = {}
+        namespace.update(ns)
+        namespace.update(kwargs)
+        interpreter = Interpreter(namespace=namespace)
+        return interpreter.eval(self.code) if isinstance(self.code, Tree) else self.code.value
+
+
+class LenFunction(Function):
+    def __call__(self, ns, name, *args, **kwargs):
+        return len(kwargs['var'])
+
+
+class PrintFunction(Function):
+    def __call__(self, ns, name, *args, **kwargs):
+        msg = str(kwargs['msg']).format(**ns).replace('\\n', '\n')
+        print(msg.format(ns), end='')
+        return msg
 
 
 class Interpreter(object):
@@ -68,10 +96,8 @@ class Interpreter(object):
     #
     # builtin functions
     #
-    def fn_print(self, msg):
-        retval = str(msg).format(**self.namespace).replace('\\n', '\n')
-        print(retval, end='')
-        return retval
+    fn_print = PrintFunction(signature = [ ('msg', typedecl['str']) ], code = print)
+    fn_len = LenFunction(signature = [ ('var', typedecl['any']) ], code = len)
 
     #
     # token actions (alphabetical)
@@ -81,6 +107,18 @@ class Interpreter(object):
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a + b
+
+    def args(self, ast):
+        pargs = []
+        nargs = {}
+
+        for arg in ast:
+            if isinstance(arg, Tree) and arg.data == 'assoc':
+                nargs.update(self.eval(arg))
+            else:
+                pargs.append(self.eval(arg) if isinstance(arg, Tree) else arg)
+
+        return pargs, nargs
 
     def array(self, ast):
         retval = []
@@ -93,10 +131,10 @@ class Interpreter(object):
         return [ self.eval(b) if isinstance(b, Tree) else b for b in ast ]
 
     def assertion(self, ast):
-        condition = self.boolean(ast)
+        condition = self.eval(ast[0])
         try:
             assert condition
-        except AssertionError, e:
+        except AssertionError as e:
             print("Assertion failed {} {}".format(e, ast))
             exit(1)
         return condition
@@ -112,7 +150,7 @@ class Interpreter(object):
         for key in branch:
             val = next(branch)
             if isinstance(val, Tree): val = self.eval(val)
-            retval[key.value] = val
+            retval[key.value if hasattr(key, 'value') else key] = val
         return retval
 
     def block(self, ast):
@@ -121,7 +159,7 @@ class Interpreter(object):
             retval = self.eval(branch)
         return retval
 
-    def boolean(self, ast):
+    def cmp_log(self, ast):
         bools = { 'or': op.or_, 'and': op.and_ }
         ast = copy(ast)
         branch = ast.pop(0)
@@ -133,19 +171,36 @@ class Interpreter(object):
         return retval
 
     def call(self, ast):
-        name, args = ast
-        if isinstance(args, Tree): args = self.eval(args)
-        args = dict(args)
+        def validate(signature, pargs, nargs):
+            sig = copy(signature)
+            retval = {}
 
-        if name in self.namespace: # call user-defined functions
-            return self.namespace[name](**args)
+            for value in pargs:
+                try:
+                    name, valid = sig.pop(0)
+                except IndexError:
+                    print("Invalid arguments, expected {}".format(signature))
+                    exit(1)
+                retval[name] = valid(value)
 
-        fn = 'fn_' + name
-        try:
-            return getattr(self, fn)(**args)
-        except AttributeError:
-            print("Unknown function `{}`".format(name))
-            exit(1)
+            sig = dict(sig)
+            for name, value in nargs.items():
+                try:
+                    valid = sig[name]
+                except KeyError:
+                    print("Invalid arguments, expected {}".format(signature))
+                    exit(1)
+                retval[name] = valid(value)
+
+            return retval
+
+        name, args = str(ast[0]), ast[1:]
+        pargs = [] # positional args
+        nargs = {} # named args
+        pargs, nargs = [ self.eval(a) if isinstance(a, Tree) else a for a in args ][0]
+        fn = self.namespace[name] if name in self.namespace else getattr(self, 'fn_' + name)
+        args = validate(fn.signature, pargs=pargs, nargs=nargs)
+        return fn(ns=self.namespace, name=name, **args)
 
     def cmp_eq(self, ast):
         a, b = ast
@@ -203,40 +258,16 @@ class Interpreter(object):
 
         for self.namespace[var] in irange:
             retval = self.eval(block)
-
         return retval
 
-    def function(self, ast):
-        def execute(signature, block, *args, **kwargs):
-            def validate(signature, arguments):
-                try:
-                    assert set(signature) == set(arguments)
-                except AssertionError, e:
-                    print("\nIncorrect arguments to function. {} {}".format(signature, arguments))
-                    exit(1)
-
-                try:
-                    castargs = { k:signature[k](v) for (k, v) in arguments.items() }
-                except ValueError, e:
-                    print("\nInvalid type passed to function. {}".format(e))
-                    exit(1)
-
-                return castargs
-
-            kwargs = validate(signature, kwargs)
-            namespace = {}
-            namespace.update(self.namespace)
-            namespace.update(kwargs)
-
-            interpreter = Interpreter(namespace=namespace)
-            return interpreter.eval(block) if isinstance(block, Tree) else block.value
-
+    def funcdef(self, ast):
         try:
             signature, block = ast
         except ValueError:
             block = ast
             signature = {}
-        return partial(execute, signature, block)
+
+        return Function(signature, block)
 
     def ifcond(self, ast):
         if self.eval(ast[0]):
@@ -288,7 +319,15 @@ class Interpreter(object):
         return retval
 
     def regex(self, ast):
+        '''not implemented
+        '''
         print(ast)
+        raise SystemExit
+
+    def return_expr(self, ast):
+        ''' not implemented
+        '''
+        print("return:ast", ast)
         raise SystemExit
 
     def sub(self, ast):
@@ -313,6 +352,11 @@ class Interpreter(object):
         while self.eval(condition):
             retval = self.eval(block)
         return retval
+
+    def yield_expr(self, ast):
+        retval = [ self.eval(b) if isinstance(b, Tree) else ast for b in ast ]
+        print("yield:retval", retval[-1])
+        return retval[-1]
 
     def x__del__(self):
         pprint(self.namespace)
@@ -349,13 +393,13 @@ def main(program, grammar, dump_tree):
 
         try:
             ast = parser.parse(s)
-        except Exception, e:
+        except Exception as e:
             print(e)
             continue
 
         try:
             print(interpreter.eval(ast))
-        except Exception, e:
+        except Exception as e:
             print(e)
             continue
 
