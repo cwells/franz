@@ -314,7 +314,6 @@ class Interpreter(object):
             return self.eval(ast[2])
 
     def include_file(self, ast):
-        # filename = ast[0].children[0]
         filename = ast[0]
         ast = parser.parse(open(filename + EXTENSION, 'r').read())
         return self.eval(ast)

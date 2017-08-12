@@ -8,9 +8,8 @@ errors = 0
 f = fn (a: int, b: int, c: int, d: int)
     v = a + b + c + d
 
-g = fn () { # empty argument list
-    return # BUG! must have braces with 'return' - probably due to stack unwinding from exception
-}
+g = fn () # empty argument list
+    return nil
 
 a = 1
 b = 2
@@ -38,5 +37,5 @@ rescue errors++
 try assert g() == nil rescue errors++
 try assert g(1) == nil rescue nil else errors++
 
-print(if errors "Some fs failed ({errors}) errors\n" else "passed!\n")
+print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
 

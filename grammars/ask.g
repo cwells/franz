@@ -14,7 +14,6 @@
      | assertion
      | tryrescue
      | yield_expr
-     | return_expr
      | break_expr
      | include_file
 
@@ -39,7 +38,6 @@
 ?whileloop: "while" expr expr                        -> whileloop
 ?assertion: "assert" expr                            -> assertion
 ?yield_expr: "yield" expr                            -> yield_expr
-?return_expr: "return" expr*                         -> return_expr
 ?break_expr: "break" expr*                           -> break_expr
 
 ?cmp: term
@@ -79,6 +77,7 @@
     | "++" name          -> preinc
     | name "--"          -> postdec
     | "--" name          -> predec
+    | "return" expr      -> return_expr
 
 ?args: expr ("," expr)*      -> args
 ?arrayitem: expr ("," expr)* -> arrayitem
