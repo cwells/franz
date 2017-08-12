@@ -38,5 +38,13 @@ try assert test( # complex expression
 ) == 10
 rescue errors++
 
+
+test = fn () { # empty argument list
+    return # BUG! must have braces with 'return' - probably due to stack unwinding from exception
+}
+
+try assert test() == nil
+rescue errors++
+
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
 

@@ -15,6 +15,7 @@
      | tryrescue
      | yield_expr
      | return_expr
+     | break_expr
      | include_file
 
 ?include_file: "include" expr                        -> include_file
@@ -39,6 +40,7 @@
 ?assertion: "assert" expr                            -> assertion
 ?yield_expr: "yield" expr                            -> yield_expr
 ?return_expr: "return" expr*                         -> return_expr
+?break_expr: "break" expr*                           -> break_expr
 
 ?cmp: term
     | cmp ("and"|"or") term -> cmp_log
