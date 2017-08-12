@@ -1,8 +1,8 @@
 #
 # f argument passing
 #
-errors = 0
 print("Testing function arguments...")
+errors = 0
 
 f = fn (a: int, b: int, c: int, d: int)
     v = a + b + c + d
