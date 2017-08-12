@@ -1,28 +1,24 @@
 #
-# test argument passing
+# f argument passing
 #
 errors = 0
 print("Testing function arguments...")
 
-test = fn (a: int, b: int, c: int, d: int)
+f = fn (a: int, b: int, c: int, d: int)
     v = a + b + c + d
+
+g = fn () { # empty argument list
+    return # BUG! must have braces with 'return' - probably due to stack unwinding from exception
+}
 
 a = 1
 b = 2
+try assert f(a: 1, b: 2, c: 3, d: 4) == 10 rescue errors++
+try assert f(1, 2, 3, 4) == 10 rescue errors++
+try assert f(1, 2, c: 3, d: 4) == 10 rescue errors++
+try assert f(a, b, b + 1, d: b * 2) == 10 rescue errors++
 
-try assert test(a: 1, b: 2, c: 3, d: 4) == 10   # named args
-rescue errors++
-
-try assert test(1, 2, 3, 4) == 10               # positional args
-rescue errors++
-
-try assert test(1, 2, c: 3, d: 4) == 10         # mixture
-rescue errors++
-
-try assert test(a, b, b + 1, d: b * 2) == 10    # simple expressions
-rescue errors++
-
-try assert test( # complex expression
+try assert f( # complex expression
     a: 1,
     b: 2,
     c: 3,
@@ -30,7 +26,7 @@ try assert test( # complex expression
 ) == 10
 rescue errors++
 
-try assert test( # complex expression
+try assert f( # complex expression
     a: 1,
     b: 2,
     c: 3,
@@ -38,13 +34,8 @@ try assert test( # complex expression
 ) == 10
 rescue errors++
 
+try assert g() == nil rescue errors++
+try assert g(1) == nil rescue nil else errors++
 
-test = fn () { # empty argument list
-    return # BUG! must have braces with 'return' - probably due to stack unwinding from exception
-}
-
-try assert test() == nil
-rescue errors++
-
-print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
+print(if errors "Some fs failed ({errors}) errors\n" else "passed!\n")
 

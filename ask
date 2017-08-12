@@ -34,6 +34,9 @@ class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
+class InvalidArgument(Exception): pass
+class InvalidToken(Exception): pass
+
 class Atomize(InlineTransformer):
     integer = int
     decimal = float
@@ -99,7 +102,7 @@ class Interpreter(object):
         if hasattr(self, ast.data):
             return getattr(self, ast.data)(ast.children)
         else:
-            print("Parse error, unknown token: {}".format(ast.data))
+            raise InvalidToken
 
     #
     # builtin functions
@@ -140,11 +143,7 @@ class Interpreter(object):
 
     def assertion(self, ast):
         condition = self.eval(ast[0])
-        try:
-            assert condition
-        except AssertionError as e:
-            print("Assertion failed {}\n {}".format(e, ast[0]))
-            exit(1)
+        assert condition
         return condition
 
     def assign(self, ast):
@@ -210,9 +209,8 @@ class Interpreter(object):
             for value in pargs:
                 try:
                     name, valid = sig.pop(0)
-                except IndexError:
-                    print("Invalid arguments, expected {}".format(signature))
-                    exit(1)
+                except (IndexError, KeyError):
+                    raise InvalidArgument
                 retval[name] = valid(value)
 
             sig = dict(sig)
@@ -220,8 +218,7 @@ class Interpreter(object):
                 try:
                     valid = sig[name]
                 except KeyError:
-                    print("Invalid arguments, expected {}".format(signature))
-                    exit(1)
+                    raise InvalidArgument
                 retval[name] = valid(value)
 
             return retval
@@ -425,9 +422,6 @@ class Interpreter(object):
         retval = [ self.eval(b) if isinstance(b, Tree) else ast for b in ast ]
         print("yield:retval", retval[-1])
         return retval[-1]
-
-    def x__del__(self):
-        pprint(self.namespace)
 
 
 @click.command()
