@@ -38,5 +38,5 @@ try assert test(
 ) == 10 # complex expression
 rescue errors++
 
-print(if errors "Some tests failed ({errors}) errors\n" else "Tests passed!\n")
+print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
 

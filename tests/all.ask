@@ -1,0 +1,4 @@
+include "tests/math"
+include "tests/args"
+include "tests/fibonacci"
+

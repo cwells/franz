@@ -15,6 +15,9 @@
      | tryrescue
      | yield_expr
      | return_expr
+     | include_file
+
+?include_file: "include" expr                        -> include_file
 
 ?assign: name "=" expr
 ?assign_add: name "+=" expr

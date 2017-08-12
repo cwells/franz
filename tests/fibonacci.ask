@@ -23,5 +23,5 @@ sequence = fibonacci_sequence!(start: 1, end: 20)
 try assert sequence == [ 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765 ]
 rescue errors++
 
-print(if errors "Some tests failed ({errors}) errors\n" else "Tests passed!\n")
+print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
 

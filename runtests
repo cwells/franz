@@ -1,6 +1,0 @@
-#!/bin/bash
-
-for f in tests/*.ask; do
-    echo -n "running $f: "
-    ./ask $f
-done

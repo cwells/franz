@@ -17,6 +17,9 @@ try:
 except NameError:
     pass
 
+GRAMMAR = 'grammars/ask.g'
+EXTENSION = '.ask'
+
 typedecl = {
     'int':   int,
     'float': float,
@@ -45,6 +48,13 @@ class Atomize(InlineTransformer):
             sig.append((param, typedecl.get(paramtype, None)))
         return sig
 
+
+parser = Lark(
+    open(GRAMMAR).read(),
+    start       = 'program',
+    parser      = 'lalr',
+    transformer = Atomize()
+)
 
 class Function(object):
     def __init__(self, signature, code):
@@ -302,6 +312,12 @@ class Interpreter(object):
         elif len(ast) > 2:
             return self.eval(ast[2])
 
+    def include_file(self, ast):
+        # filename = ast[0].children[0]
+        filename = ast[0]
+        ast = parser.parse(open(filename + EXTENSION, 'r').read())
+        return self.eval(ast)
+
     def irange(self, ast):
         try:
             start, end = ast
@@ -332,10 +348,6 @@ class Interpreter(object):
 
     def nil(self, ast):
         return None
-
-    def pipe(self, ast):
-        print("pipe", ast)
-
 
     def postdec(self, ast):
         var = ast[0]
@@ -420,12 +432,6 @@ class Interpreter(object):
 @click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/ask.g')
 @click.option('--dump-tree', '-d', is_flag=True)
 def main(program, grammar, dump_tree):
-    parser = Lark(
-        open(grammar).read(),
-        start       = 'program',
-        parser      = 'lalr',
-        transformer = Atomize()
-    )
     interpreter = Interpreter()
 
     if program is not None:
