@@ -3,8 +3,8 @@
 # but I chose it because it tests recursion and nested scopes
 #
 
-errors = 0
 print("Testing fibonacci sequence (recursion, scope)...")
+errors = 0
 
 fibonacci_sequence! = fn (start: int, end: int) {
     fibonacci_number! = fn (nth: int) {
