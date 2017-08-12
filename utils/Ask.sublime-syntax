@@ -1,0 +1,98 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+file_extensions:
+  - ask
+scope: source.ask
+contexts:
+  main:
+    # Strings begin and end with quotes, and use backslashes as an escape
+    # character
+    - match: '"'
+      scope: punctuation.definition.string.begin.ask
+      push: double_quoted_string
+
+    # Comments begin with a '#' and finish at the end of the line
+    - match: '#'
+      scope: punctuation.definition.comment.ask
+      push: line_comment
+
+    # Note that blackslashes don't need to be escaped within single quoted
+    # strings in YAML. When using single quoted strings, only single quotes
+    # need to be escaped: this is done by using two single quotes next to each
+    # other.
+    - match: '\b(if|else|for|while|in|to|fn|ⲗ|try|rescue|assert|include|yield|return|break|continue)\b'
+      scope: keyword.control
+
+    # logical op
+    - match: '\b(and|or|not)\b'
+      scope: keyword.operator.word
+
+    # numbers
+    - match: '\b(-)?[0-9.]+\b'
+      scope: constant.numeric
+
+    # types
+    - match: '\b(int|str|any|float|list|dict|bool)\b'
+      scope: storage.type
+
+    # bools
+    - match: '\b(true|false|nil)\b'
+      scope: constant.language
+
+    # assoc
+    - match: '([a-zA-Z_?!]+)\s*:'
+      scope: variable.other.member
+
+    # constants (all uppercase)
+    - match: '\b([A-Z_?!])+\b'
+      scope: variable.other.constant
+
+    # separators and groupers
+    - match: '[,]'
+      scope: punctuation.separator
+
+    # operators
+    - match: '([*+\-^=<>%/]+)'
+      scope: keyword.operator
+
+    # function definition
+    - match: '([a-zA-Z][a-zA-Z0-9_!?]*)\s*(=)\s*(fn)'
+      captures:
+        1: entity.name.function.constructor
+        2: keyword.operator
+        3: keyword.operator
+
+    # # function call
+    # - match: '([a-zA-Z][a-zA-Z0-9_!?]*)\s*\('
+    #   captures:
+    #     1: entity.name.function
+
+    #
+    - match: '\('
+      push: brackets
+    - match: '\)'
+      scope: invalid.illegal.stray-bracket-end
+
+  brackets:
+    - match: '\)'
+      pop: true
+    - include: main
+
+  double_quoted_string:
+    - meta_scope: string.quoted.double
+
+    - match: '\\.'
+      scope: constant.character.escape
+
+    - match: '"'
+      scope: punctuation.definition.string.end.args
+      pop: true
+
+    - match: '{[^}]+}'
+      scope: constant.other.placeholder
+
+  line_comment:
+    - meta_scope: comment.line
+    - match: $
+      pop: true
