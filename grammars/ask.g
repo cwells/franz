@@ -38,7 +38,7 @@
 ?whileloop: "while" expr expr                        -> whileloop
 ?assertion: "assert" expr                            -> assertion
 ?yield_expr: "yield" expr                            -> yield_expr
-?return_expr: "return" expr                          -> return_expr
+?return_expr: "return" expr*                         -> return_expr
 
 ?cmp: term
     | cmp ("and"|"or") term -> cmp_log

@@ -30,6 +30,9 @@ typedecl = {
     'any':   lambda v: v
 }
 
+class ReturnException(Exception):
+    def __init__(self, value):
+        self.value = value
 
 class Atomize(InlineTransformer):
     integer = int
@@ -226,10 +229,17 @@ class Interpreter(object):
         name, args = str(ast[0]), ast[1:]
         pargs = [] # positional args
         nargs = {} # named args
-        pargs, nargs = [ self.eval(a) if isinstance(a, Tree) else a for a in args ][0]
+        aargs = [ self.eval(a) if isinstance(a, Tree) else a for a in args ]
+        try:
+            pargs, nargs = aargs[0]
+        except IndexError:
+            pass
         fn = self.namespace[name] if name in self.namespace else getattr(self, 'fn_' + name)
         args = validate(fn.signature, pargs=pargs, nargs=nargs)
-        return fn(ns=self.namespace, name=name, **args)
+        try:
+            return fn(ns=self.namespace, name=name, **args)
+        except ReturnException as e:
+            return e.value
 
     def cmp_eq(self, ast):
         a, b = ast
@@ -296,9 +306,8 @@ class Interpreter(object):
         try:
             signature, block = ast
         except ValueError:
-            block = ast
+            block = ast[0]
             signature = {}
-
         return Function(signature, block)
 
     def ifcond(self, ast):
@@ -385,10 +394,9 @@ class Interpreter(object):
         raise SystemExit
 
     def return_expr(self, ast):
-        ''' not implemented
-        '''
-        print("return:ast", ast)
-        raise SystemExit
+        retval = ast[0] if ast else None
+        if isinstance(retval, Tree): retval = self.eval(retval)
+        raise ReturnException(retval)
 
     def sub(self, ast):
         a, b = ast

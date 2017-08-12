@@ -1,0 +1,24 @@
+#
+# test return <value>
+#
+
+print("Testing return [value]...")
+errors = 0
+
+f = fn () { # return <value>
+    for i in 1 to 10
+        if i == 5 return "string"
+}
+
+g = fn () { # return
+    for i in 1 to 10
+        if i == 5 return
+}
+
+try assert f() == "string"
+rescue errors++
+
+try assert g() == nil
+rescue errors++
+
+print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
