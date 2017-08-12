@@ -56,6 +56,7 @@ parser = Lark(
     transformer = Atomize()
 )
 
+
 class Function(object):
     def __init__(self, signature, code):
         self.signature = signature

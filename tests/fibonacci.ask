@@ -2,6 +2,7 @@
 # this is actually the worst way to compute a fibonacci sequence
 # but I chose it because it tests recursion and nested scopes
 #
+
 errors = 0
 print("Testing fibonacci sequence (recursion, scope)...")
 
