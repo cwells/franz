@@ -2,6 +2,7 @@
 
 ?expr: cmp
      | assign
+     | assign_add
      | assoc
      | ifcond
      | forloop
@@ -16,6 +17,10 @@
      | return_expr
 
 ?assign: name "=" expr
+?assign_add: name "+=" expr
+?assign_sub: name "-=" expr
+?assign_mul: name "*=" expr
+?assign_div: name "/=" expr
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
@@ -32,7 +37,6 @@
 ?yield_expr: "yield" expr                            -> yield_expr
 ?return_expr: "return" expr                          -> return_expr
 
-
 ?cmp: term
     | cmp ("and"|"or") term -> cmp_log
     | cmp "<" term          -> cmp_lt
@@ -40,7 +44,7 @@
     | cmp "<=" term         -> cmp_lteq
     | cmp ">=" term         -> cmp_gteq
     | cmp "==" term         -> cmp_eq
-    | cmp "<>" term         -> cmp_neq
+    | cmp ("<>"|"!=") term  -> cmp_neq
 
 ?term: factor
     | term "+" factor    -> add
@@ -65,7 +69,11 @@
     | "nil"              -> nil
     | name "(" args* ")" -> call
     | "[" arrayitem* "]" -> array
-    | "(" expr ")"
+    | "(" expr ")"       -> expr
+    | name "++"          -> postinc
+    | "++" name          -> preinc
+    | name "--"          -> postdec
+    | "--" name          -> predec
 
 ?args: expr ("," expr)*      -> args
 ?arrayitem: expr ("," expr)* -> arrayitem
@@ -74,7 +82,7 @@
 ?string: STRING
 
 COMMENT: /\#[^\n]*/
-NAME: ( LETTER | "@" LETTER) ("_"|"-"|"?"|"!"|LETTER|DIGIT )*
+NAME: ( LETTER | "@" LETTER) ("_"|"?"|"!"|LETTER|DIGIT )*
 DECIMAL: INTEGER "." DIGIT+
 AND: "and"
 OR: "or"

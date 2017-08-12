@@ -1,0 +1,42 @@
+#
+# test argument passing
+#
+errors = 0
+print("Testing function arguments...")
+
+test = fn (a: int, b: int, c: int, d: int)
+    v = a + b + c + d
+
+a = 1
+b = 2
+
+try assert test(a: 1, b: 2, c: 3, d: 4) == 10   # named args
+rescue errors = errors + 1
+
+try assert test(1, 2, 3, 4) == 10               # positional args
+rescue errors = errors + 1
+
+try assert test(1, 2, c: 3, d: 4) == 10         # mixture
+rescue errors = errors + 1
+
+try assert test(a, b, b + 1, d: b * 2) == 10    # simple expressions
+rescue errors = errors + 1
+
+try assert test(
+    a: 1,
+    b: 2,
+    c: 3,
+    d: for i in 1 to 4 i
+) == 10 # complex expression
+rescue errors++
+
+try assert test(
+    a: 1,
+    b: 2,
+    c: 3,
+    d: if a == 1 for i in 1 to 4 i
+) == 10 # complex expression
+rescue errors++
+
+print(if errors "Some tests failed ({errors}) errors\n" else "Tests passed!\n")
+

@@ -135,7 +135,7 @@ class Interpreter(object):
         try:
             assert condition
         except AssertionError as e:
-            print("Assertion failed {} {}".format(e, ast))
+            print("Assertion failed {}\n {}".format(e, ast[0]))
             exit(1)
         return condition
 
@@ -143,6 +143,30 @@ class Interpreter(object):
         var, val = ast
         self.namespace[var.value] = self.eval(val)
         return self.namespace[var.value]
+
+    def assign_add(self, ast):
+        var, val = ast
+        if isinstance(val, Tree): val = self.eval(val)
+        self.namespace[var] += val
+        return self.namespace[var]
+
+    def assign_div(self, ast):
+        var, val = ast
+        if isinstance(val, Tree): val = self.eval(val)
+        self.namespace[var] /= val
+        return self.namespace[var]
+
+    def assign_mul(self, ast):
+        var, val = ast
+        if isinstance(val, Tree): val = self.eval(val)
+        self.namespace[var] *= val
+        return self.namespace[var]
+
+    def assign_sub(self, ast):
+        var, val = ast
+        if isinstance(val, Tree): val = self.eval(val)
+        self.namespace[var] -= val
+        return self.namespace[var]
 
     def assoc(self, ast):
         retval = {}
@@ -244,6 +268,9 @@ class Interpreter(object):
         if isinstance(b, Tree): b = self.eval(b)
         return a / b
 
+    def expr(self, ast):
+        return self.eval(ast[0])
+
     def floor(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
@@ -272,7 +299,7 @@ class Interpreter(object):
     def ifcond(self, ast):
         if self.eval(ast[0]):
             return self.eval(ast[1])
-        elif len(ast) > 1:
+        elif len(ast) > 2:
             return self.eval(ast[2])
 
     def irange(self, ast):
@@ -305,6 +332,32 @@ class Interpreter(object):
 
     def nil(self, ast):
         return None
+
+    def pipe(self, ast):
+        print("pipe", ast)
+
+
+    def postdec(self, ast):
+        var = ast[0]
+        retval = self.namespace[var]
+        self.namespace[var] -= 1
+        return retval
+
+    def postinc(self, ast):
+        var = ast[0]
+        retval = self.namespace[var]
+        self.namespace[var] += 1
+        return retval
+
+    def predec(self, ast):
+        var = ast[0]
+        self.namespace[var] -= 1
+        return self.namespace[var]
+
+    def preinc(self, ast):
+        var = ast[0]
+        self.namespace[var] += 1
+        return self.namespace[var]
 
     def pow(self, ast):
         a, b = ast
