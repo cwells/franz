@@ -13,9 +13,8 @@ fibonacci_sequence! = fn (start: int, end: int) {
         else
             fibonacci_number!(nth - 1) + fibonacci_number!(nth - 2)
 
-    retval = []
     for i in start to end
-        retval += [ fibonacci_number!(i) ]
+        yield fibonacci_number!(i)
 }
 
 sequence = fibonacci_sequence!(start: 1, end: 20)

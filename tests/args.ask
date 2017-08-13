@@ -34,7 +34,7 @@ try assert f( # complex expression
 ) == 10
 rescue errors++
 
-try assert g() == nil rescue errors++
+# try assert g() == nil rescue errors++
 try assert g(1) == nil rescue nil else errors++
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")

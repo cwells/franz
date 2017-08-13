@@ -9,6 +9,7 @@
      | whileloop
      | irange
      | funcdef
+     | gendef
      | "{" expr* "}"     -> block
      | expr "+" expr     -> add
      | assertion
@@ -27,6 +28,7 @@
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
+?gendef: "gn" "(" signature* ")" expr                -> gendef
 ?funcdef: ("fn"|"ⲗ") "(" signature* ")" expr         -> funcdef
 ?signature: (name ":" name ("," name ":" name)*)     -> signature
 

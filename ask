@@ -7,6 +7,7 @@ import operator as op
 import click
 from functools import partial
 from decorator import decorator
+from greenlet import greenlet
 from pprint import pprint
 from copy import copy
 from lark import Lark, Tree, InlineTransformer
@@ -62,47 +63,57 @@ parser = Lark(
     transformer = Atomize()
 )
 
-
 class Function(object):
     def __init__(self, signature, code):
         self.signature = signature
         self.code = code
+        self.yield_to = None
+        self.interpreter = None
 
-    def __call__(self, ns, name, *args, **kwargs):
-        namespace = {}
-        namespace.update(ns)
-        namespace.update(kwargs)
-        interpreter = Interpreter(namespace=namespace)
-        return interpreter.eval(self.code) if isinstance(self.code, Tree) else self.code.value
+    def __call__(self, context, name, *args, **kwargs):
+        ctx = {}
+        ctx.update(context)
+        ctx.update(kwargs)
+        self.interpreter = Interpreter(context=ctx)
+        self.interpreter.yield_expr = self.yield_expr # monkey-patch interpreter
+        return self.interpreter.eval(self.code) if isinstance(self.code, Tree) else self.code.value
+
+    def yield_expr(self, ast):
+        item = self.interpreter.eval(ast)
+        return self.yield_to.switch(item) # jump to call method
 
 
 class LenFunction(Function):
-    def __call__(self, ns, name, *args, **kwargs):
+    def __call__(self, context, name, *args, **kwargs):
         return len(kwargs['var'])
 
 
 class PrintFunction(Function):
-    def __call__(self, ns, name, *args, **kwargs):
-        msg = str(kwargs['msg']).format(**ns).replace('\\n', '\n')
-        print(msg.format(ns), end='')
+    def __call__(self, context, name, *args, **kwargs):
+        msg = str(kwargs['msg']).format(**context).replace('\\n', '\n')
+        print(msg.format(context), end='')
         return msg
 
 
 class Interpreter(object):
-    def __init__(self, namespace=None):
-        self.namespace = namespace if namespace else {}
+    def __init__(self, context=None):
+        self.context = context if context else {}
 
     #
     # eval
     #
     def eval(self, ast):
+        if isinstance(ast, list):
+            retval = [ self.eval(b) for b in ast ]
+            return retval[-1]
+
         if not hasattr(ast, 'data'):
             return ast
 
         if hasattr(self, ast.data):
             return getattr(self, ast.data)(ast.children)
-        else:
-            raise InvalidToken
+
+        raise InvalidToken
 
     #
     # builtin functions
@@ -122,7 +133,6 @@ class Interpreter(object):
     def args(self, ast):
         pargs = []
         nargs = {}
-
         for arg in ast:
             if isinstance(arg, Tree) and arg.data == 'assoc':
                 nargs.update(self.eval(arg))
@@ -148,32 +158,32 @@ class Interpreter(object):
 
     def assign(self, ast):
         var, val = ast
-        self.namespace[var.value] = self.eval(val)
-        return self.namespace[var.value]
+        self.context[var.value] = self.eval(val)
+        return self.context[var.value]
 
     def assign_add(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
-        self.namespace[var] += val
-        return self.namespace[var]
+        self.context[var] += val
+        return self.context[var]
 
     def assign_div(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
-        self.namespace[var] /= val
-        return self.namespace[var]
+        self.context[var] /= val
+        return self.context[var]
 
     def assign_mul(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
-        self.namespace[var] *= val
-        return self.namespace[var]
+        self.context[var] *= val
+        return self.context[var]
 
     def assign_sub(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
-        self.namespace[var] -= val
-        return self.namespace[var]
+        self.context[var] -= val
+        return self.context[var]
 
     def assoc(self, ast):
         retval = {}
@@ -188,17 +198,6 @@ class Interpreter(object):
         retval = None
         for branch in ast:
             retval = self.eval(branch)
-        return retval
-
-    def cmp_log(self, ast):
-        bools = { 'or': op.or_, 'and': op.and_ }
-        ast = copy(ast)
-        branch = ast.pop(0)
-        retval = self.eval(branch) if isinstance(branch, Tree) else branch
-        while ast:
-            logop, val = ast.pop(0), ast.pop(0)
-            val = self.eval(val) if isinstance(val, Tree) else val
-            retval = bools[logop.value](retval, val)
         return retval
 
     def call(self, ast):
@@ -231,12 +230,36 @@ class Interpreter(object):
             pargs, nargs = aargs[0]
         except IndexError:
             pass
-        fn = self.namespace[name] if name in self.namespace else getattr(self, 'fn_' + name)
+        fn = self.context[name] if name in self.context else getattr(self, 'fn_' + name)
         args = validate(fn.signature, pargs=pargs, nargs=nargs)
-        try:
-            return fn(ns=self.namespace, name=name, **args)
-        except ReturnException as e:
-            return e.value
+
+        # try:
+        #     return fn(ns=self.context, name=name, **args)
+        # except ReturnException as e:
+        #     return e.value
+
+        yield_val = []
+        def switch_handler(item):
+            # print("switch_handler:item", item)
+            while True:
+                yield_val.append(item)
+                item = fn_greenlet.switch()
+            return yield_val
+
+        def catch_return(fn, context, name, **kwargs):
+            # print("catch_return:args", kwargs)
+            try:
+                # print("catch_return:fn", kwargs)
+                return fn(context=context, name=name, **kwargs)
+            except ReturnException as e:
+                # print("catch_return:exception", e.value)
+                return e.value
+
+        fn.yield_to = greenlet(switch_handler)
+        fn_greenlet = greenlet(partial(catch_return, fn, self.context, name=name, **args))
+        retval = fn_greenlet.switch()
+
+        return yield_val if yield_val else retval
 
     def cmp_eq(self, ast):
         a, b = ast
@@ -255,6 +278,17 @@ class Interpreter(object):
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a >= b
+
+    def cmp_log(self, ast):
+        bools = { 'or': op.or_, 'and': op.and_ }
+        ast = copy(ast)
+        branch = ast.pop(0)
+        retval = self.eval(branch) if isinstance(branch, Tree) else branch
+        while ast:
+            logop, val = ast.pop(0), ast.pop(0)
+            val = self.eval(val) if isinstance(val, Tree) else val
+            retval = bools[logop.value](retval, val)
+        return retval
 
     def cmp_lt(self, ast):
         a, b = ast
@@ -295,7 +329,7 @@ class Interpreter(object):
         irange = self.eval(irange)
         retval = None
 
-        for self.namespace[var] in irange:
+        for self.context[var] in irange:
             retval = self.eval(block)
         return retval
 
@@ -344,32 +378,32 @@ class Interpreter(object):
         return a * b
 
     def name(self, ast):
-        return self.namespace[ast[0].value]
+        return self.context[ast[0].value]
 
     def nil(self, ast):
         return None
 
     def postdec(self, ast):
         var = ast[0]
-        retval = self.namespace[var]
-        self.namespace[var] -= 1
+        retval = self.context[var]
+        self.context[var] -= 1
         return retval
 
     def postinc(self, ast):
         var = ast[0]
-        retval = self.namespace[var]
-        self.namespace[var] += 1
+        retval = self.context[var]
+        self.context[var] += 1
         return retval
 
     def predec(self, ast):
         var = ast[0]
-        self.namespace[var] -= 1
-        return self.namespace[var]
+        self.context[var] -= 1
+        return self.context[var]
 
     def preinc(self, ast):
         var = ast[0]
-        self.namespace[var] += 1
-        return self.namespace[var]
+        self.context[var] += 1
+        return self.context[var]
 
     def pow(self, ast):
         a, b = ast
@@ -419,7 +453,6 @@ class Interpreter(object):
 
     def yield_expr(self, ast):
         retval = [ self.eval(b) if isinstance(b, Tree) else ast for b in ast ]
-        print("yield:retval", retval[-1])
         return retval[-1]
 
 
