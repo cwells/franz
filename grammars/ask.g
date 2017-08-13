@@ -1,6 +1,6 @@
 ?program: expr*
 
-?expr: cmp
+?expr: logic
      | assign
      | assign_add
      | assoc
@@ -40,14 +40,16 @@
 ?yield_expr: "yield" expr                            -> yield_expr
 ?break_expr: "break" expr*                           -> break_expr
 
+?logic: cmp
+    | logic ("and"|"or") cmp -> cmp_log
+
 ?cmp: term
-    | cmp ("and"|"or") term -> cmp_log
-    | cmp "<" term          -> cmp_lt
-    | cmp ">" term          -> cmp_gt
-    | cmp "<=" term         -> cmp_lteq
-    | cmp ">=" term         -> cmp_gteq
-    | cmp "==" term         -> cmp_eq
-    | cmp ("<>"|"!=") term  -> cmp_neq
+    | cmp "<" term           -> cmp_lt
+    | cmp ">" term           -> cmp_gt
+    | cmp "<=" term          -> cmp_lteq
+    | cmp ">=" term          -> cmp_gteq
+    | cmp "==" term          -> cmp_eq
+    | cmp ("<>"|"!=") term   -> cmp_neq
 
 ?term: factor
     | term "+" factor    -> add

@@ -1,3 +1,4 @@
+include "tests/assign"
 include "tests/math"
 include "tests/args"
 include "tests/return"

@@ -370,7 +370,11 @@ class Interpreter(object):
         return a * b
 
     def name(self, ast):
-        return self.context[ast[0].value]
+        try:
+            return self.context[ast[0].value]
+        except KeyError:
+            print("Unknown identifier: {}".format(ast[0].value))
+            exit(1)
 
     def nil(self, ast):
         return None
