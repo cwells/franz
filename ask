@@ -233,26 +233,17 @@ class Interpreter(object):
         fn = self.context[name] if name in self.context else getattr(self, 'fn_' + name)
         args = validate(fn.signature, pargs=pargs, nargs=nargs)
 
-        # try:
-        #     return fn(ns=self.context, name=name, **args)
-        # except ReturnException as e:
-        #     return e.value
-
         yield_val = []
         def switch_handler(item):
-            # print("switch_handler:item", item)
             while True:
                 yield_val.append(item)
                 item = fn_greenlet.switch()
             return yield_val
 
         def catch_return(fn, context, name, **kwargs):
-            # print("catch_return:args", kwargs)
             try:
-                # print("catch_return:fn", kwargs)
                 return fn(context=context, name=name, **kwargs)
             except ReturnException as e:
-                # print("catch_return:exception", e.value)
                 return e.value
 
         fn.yield_to = greenlet(switch_handler)
