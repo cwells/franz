@@ -52,34 +52,34 @@
     | cmp ("<>"|"!=") term   -> cmp_neq
 
 ?term: factor
-    | term "+" factor    -> add
-    | term "-" factor    -> sub
+    | term "+" factor        -> add
+    | term "-" factor        -> sub
 
 ?factor: pow
-    | factor "*" pow     -> mul
-    | factor "/" pow     -> div
-    | factor "//" pow    -> floor
-    | factor "%" pow     -> mod
+    | factor "*" pow         -> mul
+    | factor "/" pow         -> div
+    | factor "//" pow        -> floor
+    | factor "%" pow         -> mod
 
 ?pow: atom
-    | pow "^" atom       -> pow
+    | pow "^" atom           -> pow
 
-?atom: INTEGER           -> integer
-    | DECIMAL            -> decimal
-    | name               -> name
-    | string             -> string
-    | "-" atom           -> negation
-    | "true"             -> true
-    | "false"            -> false
-    | "nil"              -> nil
-    | name "(" args* ")" -> call
-    | "[" arrayitem* "]" -> array
-    | "(" expr ")"       -> expr
-    | name "++"          -> postinc
-    | "++" name          -> preinc
-    | name "--"          -> postdec
-    | "--" name          -> predec
-    | "return" expr      -> return_expr
+?atom: INTEGER               -> integer
+    | DECIMAL                -> decimal
+    | name                   -> name
+    | string                 -> string
+    | "-" atom               -> negation
+    | "true"                 -> true
+    | "false"                -> false
+    | "nil"                  -> nil
+    | name "(" args* ")"     -> call
+    | "[" arrayitem* "]"     -> array
+    | "(" expr ")"           -> expr
+    | name "++"              -> postinc
+    | "++" name              -> preinc
+    | name "--"              -> postdec
+    | "--" name              -> predec
+    | "return" expr          -> return_expr
 
 ?args: expr ("," expr)*      -> args
 ?arrayitem: expr ("," expr)* -> arrayitem
