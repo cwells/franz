@@ -9,7 +9,6 @@
      | whileloop
      | irange
      | funcdef
-     | gendef
      | "{" expr* "}"     -> block
      | expr "+" expr     -> add
      | assertion
