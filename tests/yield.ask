@@ -6,9 +6,14 @@ print("Testing yield...")
 errors = 0
 
 loop = fn (n: int)
-    for i in 1 to 5
+    for i in 1 to n
         yield i
 
+pairs = fn (n: int)
+    for i in 1 to n
+        yield (yield i) ^ 2
+
 try assert loop(5) == [ 1, 2, 3, 4, 5 ] rescue errors++
+try assert pairs(4) == [ 1, 1, 2, 4, 3, 9, 4, 16 ] rescue errors++
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")

@@ -80,7 +80,8 @@ class Function(object):
 
     def yield_expr(self, ast):
         item = self.interpreter.eval(ast)
-        return self.yield_to.switch(item) # jump to call method
+        self.yield_to.switch(item) # jump to call method
+        return item
 
 
 class LenFunction(Function):
