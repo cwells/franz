@@ -64,6 +64,7 @@
 
 ?pow: atom
     | pow "^" atom           -> pow
+    | pow "[" atom "]"       -> subscript
 
 ?atom: INTEGER               -> integer
     | DECIMAL                -> decimal
@@ -74,23 +75,23 @@
     | "false"                -> false
     | "nil"                  -> nil
     | name "(" args* ")"     -> call
-    | "[" arrayitem* "]"     -> array
     | "(" expr ")"           -> expr
     | name "++"              -> postinc
     | "++" name              -> preinc
     | name "--"              -> postdec
     | "--" name              -> predec
     | "return" expr          -> return_expr
-//    | expr "[" expr "]"      -> subscript
+    | "[" arrayitem* "]"     -> array
 
-?args: expr ("," expr)*      -> args
-?arrayitem: expr ("," expr)* -> arrayitem
+
+?args: expr ("," expr)*       -> args
+?arrayitem: expr ("," expr)*  -> arrayitem
 
 ?name: NAME
 ?string: STRING
 
 COMMENT: /\#[^\n]*/
-NAME: ( LETTER | "@" LETTER) ("_"|"?"|"!"|LETTER|DIGIT )*
+NAME: ( (LETTER|"_") | "@" LETTER) ("_"|"?"|"!"|LETTER|DIGIT )*
 DECIMAL: INTEGER "." DIGIT+
 AND: "and"
 OR: "or"

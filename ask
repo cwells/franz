@@ -114,6 +114,7 @@ class Interpreter(object):
         if hasattr(self, ast.data):
             return getattr(self, ast.data)(ast.children)
 
+        print("eval:ast", ast)
         raise InvalidToken
 
     #
@@ -427,6 +428,12 @@ class Interpreter(object):
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a - b
+
+    def subscript(self, ast):
+        var, index = ast
+        if isinstance(var, Tree): var = self.eval(var)
+        if isinstance(index, Tree): index = self.eval(index)
+        return var[index]
 
     def tryrescue(self, ast):
         try:
