@@ -32,7 +32,8 @@
 
 ?assoc: (name|string) ":" expr                       -> assoc
 
-?irange: expr "to" expr [ "step" expr ]              -> irange
+?irange: expr "to" expr [ "step" expr ]
+    | "[" expr "to" expr [ "step" expr ] "]"         -> irange
 ?forloop: "for" name "in" expr expr                  -> forloop
 ?ifcond: "if" expr expr [ "else" expr ]              -> ifcond
 ?whileloop: "while" expr expr                        -> whileloop
@@ -80,6 +81,7 @@
     | name "--"              -> postdec
     | "--" name              -> predec
     | "return" expr          -> return_expr
+//    | expr "[" expr "]"      -> subscript
 
 ?args: expr ("," expr)*      -> args
 ?arrayitem: expr ("," expr)* -> arrayitem

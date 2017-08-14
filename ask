@@ -316,12 +316,12 @@ class Interpreter(object):
         return a // b
 
     def forloop(self, ast):
-        var, irange, block = ast
+        var, iterable, block = ast
         var = var.value
-        irange = self.eval(irange)
+        iterable = self.eval(iterable)
         retval = None
 
-        for self.context[var] in irange:
+        for self.context[var] in iterable:
             retval = self.eval(block)
         return retval
 
@@ -350,12 +350,10 @@ class Interpreter(object):
             step = 1
         except ValueError:
             start, end, step = ast
-
         if isinstance(start, Tree): start = self.eval(start)
         if isinstance(end, Tree): end = self.eval(end)
         if isinstance(step, Tree): step = self.eval(step)
-
-        return range(start, end + 1, step)
+        return list(range(start, end + 1, step))
 
     def mod(self, ast):
         a, b = ast
