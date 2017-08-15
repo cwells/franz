@@ -7,9 +7,13 @@ errors = 0
 
 try assert 1 + 2 * 3 == 7 rescue errors += 1
 try assert (1 + 2) * 3 == 9 rescue errors += 1
+try assert (1 - 2) * 3 == -3 rescue errors += 1
+try assert 1 - 2 * 3 == -5 rescue errors += 1
 try assert (3 * 3) ^ 2 == 81 rescue errors += 1
 try assert 3 * 3 ^ 2 == 27 rescue errors += 1
 try assert 4 * (3 + 3) == 24 rescue errors += 1
+try assert 4 / 2 + 6 == 8 rescue errors += 1
+try assert 4 / (2 + 6) == 0.5 rescue errors += 1
 try assert 60 % 21 // 2 == 9 rescue errors += 1
 try assert 63 % (21 // 2) == 3 rescue errors += 1
 
