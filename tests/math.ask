@@ -13,4 +13,11 @@ try assert 4 * (3 + 3) == 24 rescue errors += 1
 try assert 60 % 21 // 2 == 9 rescue errors += 1
 try assert 63 % (21 // 2) == 3 rescue errors += 1
 
+a = 8
+assert (a += 1) == 9
+assert (a -= 1) == 8
+assert (a /= 2) == 4.0
+assert a //= 2 == 2
+assert (a %= 2) == 0
+
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")

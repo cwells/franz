@@ -177,6 +177,18 @@ class Interpreter(object):
         self.context[var] /= val
         return self.context[var]
 
+    def assign_floor(self, ast):
+        var, val = ast
+        if isinstance(val, Tree): val = self.eval(val)
+        self.context[var] //= val
+        return self.context[var]
+
+    def assign_mod(self, ast):
+        var, val = ast
+        if isinstance(val, Tree): val = self.eval(val)
+        self.context[var] %= val
+        return self.context[var]
+
     def assign_mul(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
