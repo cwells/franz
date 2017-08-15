@@ -55,13 +55,16 @@ class Atomize(InlineTransformer):
             sig.append((param, typedecl.get(paramtype, None)))
         return sig
 
-
-parser = Lark(
-    open(GRAMMAR).read(),
-    start       = 'program',
-    parser      = 'lalr',
-    transformer = Atomize()
-)
+try:
+    parser = Lark(
+        open(GRAMMAR).read(),
+        start       = 'program',
+        parser      = 'lalr',
+        transformer = Atomize()
+    )
+except:
+    print("=> Grammar error")
+    raise
 
 class Function(object):
     def __init__(self, signature, code):
@@ -114,7 +117,6 @@ class Interpreter(object):
         if hasattr(self, ast.data):
             return getattr(self, ast.data)(ast.children)
 
-        print("eval:ast", ast)
         raise InvalidToken
 
     #
@@ -354,7 +356,7 @@ class Interpreter(object):
         if isinstance(start, Tree): start = self.eval(start)
         if isinstance(end, Tree): end = self.eval(end)
         if isinstance(step, Tree): step = self.eval(step)
-        return list(range(start, end + 1, step))
+        return list(range(start, end + step // abs(step), step))
 
     def mod(self, ast):
         a, b = ast
@@ -423,6 +425,13 @@ class Interpreter(object):
         if isinstance(retval, Tree): retval = self.eval(retval)
         raise ReturnException(retval)
 
+    def slice(self, ast):
+        var, start, end = ast
+        if isinstance(var, Tree): var = self.eval(var)
+        if isinstance(start, Tree): start = self.eval(start)
+        if isinstance(end, Tree): end = self.eval(end)
+        return var[start:end]
+
     def sub(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
@@ -465,10 +474,18 @@ def main(program, grammar, dump_tree):
     interpreter = Interpreter()
 
     if program is not None:
-        ast = parser.parse(open(program).read())
-        interpreter.eval(ast)
-
-        if dump_tree: print(ast.pretty())
+        try:
+            ast = parser.parse(open(program).read())
+        except:
+            print("=> Parse error")
+            raise
+        try:
+            interpreter.eval(ast)
+        except:
+            print("=> Eval error")
+            raise
+        finally:
+            if dump_tree: print(ast.pretty())
         raise SystemExit
 
     # naive repl

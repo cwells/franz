@@ -3,7 +3,6 @@
 #
 
 print("Testing math operators and order of operations...")
-
 errors = 0
 
 try assert 1 + 2 * 3 == 7 rescue errors++

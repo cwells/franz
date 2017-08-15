@@ -3,6 +3,11 @@
 ?expr: logic
      | assign
      | assign_add
+     | assign_sub
+     | assign_mul
+     | assign_div
+     | assign_floor
+     | assign_mod
      | assoc
      | ifcond
      | forloop
@@ -24,12 +29,14 @@
 ?assign_sub: name "-=" expr
 ?assign_mul: name "*=" expr
 ?assign_div: name "/=" expr
+?assign_mod: name "%=" expr
+?assign_floor: name "//=" expr
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
 ?funcdef: ("fn"|"ⲗ") "(" signature* ")" expr         -> funcdef
 ?signature: (name ":" name ("," name ":" name)*)     -> signature
-
+//?slice: expr "[" expr? ":" expr? "]"             -> slice
 ?assoc: (name|string) ":" expr                       -> assoc
 
 ?irange: expr "to" expr [ "step" expr ]
@@ -64,7 +71,8 @@
 
 ?pow: atom
     | pow "^" atom           -> pow
-    | pow "[" atom "]"       -> subscript
+    | pow "[" expr "]"       -> subscript
+    | pow "[" expr? ":" expr? "]" -> slice
 
 ?atom: INTEGER               -> integer
     | DECIMAL                -> decimal
@@ -82,7 +90,6 @@
     | "--" name              -> predec
     | "return" expr          -> return_expr
     | "[" arrayitem* "]"     -> array
-
 
 ?args: expr ("," expr)*       -> args
 ?arrayitem: expr ("," expr)*  -> arrayitem
