@@ -13,10 +13,10 @@ g = fn () # empty argument list
 
 a = 1
 b = 2
-try assert f(a: 1, b: 2, c: 3, d: 4) == 10 rescue errors++
-try assert f(1, 2, 3, 4) == 10 rescue errors++
-try assert f(1, 2, c: 3, d: 4) == 10 rescue errors++
-try assert f(a, b, b + 1, d: b * 2) == 10 rescue errors++
+try assert f(a: 1, b: 2, c: 3, d: 4) == 10 rescue errors += 1
+try assert f(1, 2, 3, 4) == 10 rescue errors += 1
+try assert f(1, 2, c: 3, d: 4) == 10 rescue errors += 1
+try assert f(a, b, b + 1, d: b * 2) == 10 rescue errors += 1
 
 try assert f( # complex expression
     a: 1,
@@ -24,7 +24,7 @@ try assert f( # complex expression
     c: 3,
     d: for i in 1 to 4 i
 ) == 10
-rescue errors++
+rescue errors += 1
 
 try assert f( # complex expression
     a: 1,
@@ -32,10 +32,10 @@ try assert f( # complex expression
     c: 3,
     d: if a == 1 for i in 1 to 4 i
 ) == 10
-rescue errors++
+rescue errors += 1
 
-# try assert g() == nil rescue errors++
-try assert g(1) == nil rescue nil else errors++
+# try assert g() == nil rescue errors += 1
+try assert g(1) == nil rescue nil else errors += 1
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
 

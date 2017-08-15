@@ -15,7 +15,7 @@ g = fn (n: int) # return <complex expression>, nested return
         f()
     }
 
-try assert f() == "string" rescue errors++
-try assert g(20) == 400 rescue errors++
+try assert f() == "string" rescue errors += 1
+try assert g(20) == 400 rescue errors += 1
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")

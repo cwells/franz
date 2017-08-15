@@ -84,10 +84,6 @@
     | "nil"                  -> nil
     | name "(" args* ")"     -> call
     | "(" expr ")"           -> expr
-    | name "++"              -> postinc
-    | "++" name              -> preinc
-    | name "--"              -> postdec
-    | "--" name              -> predec
     | "return" expr          -> return_expr
     | "[" arrayitem* "]"     -> array
 

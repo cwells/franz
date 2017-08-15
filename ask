@@ -380,28 +380,6 @@ class Interpreter(object):
     def nil(self, ast):
         return None
 
-    def postdec(self, ast):
-        var = ast[0]
-        retval = self.context[var]
-        self.context[var] -= 1
-        return retval
-
-    def postinc(self, ast):
-        var = ast[0]
-        retval = self.context[var]
-        self.context[var] += 1
-        return retval
-
-    def predec(self, ast):
-        var = ast[0]
-        self.context[var] -= 1
-        return self.context[var]
-
-    def preinc(self, ast):
-        var = ast[0]
-        self.context[var] += 1
-        return self.context[var]
-
     def pow(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)

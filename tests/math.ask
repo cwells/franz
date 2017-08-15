@@ -5,20 +5,12 @@
 print("Testing math operators and order of operations...")
 errors = 0
 
-try assert 1 + 2 * 3 == 7 rescue errors++
-try assert (1 + 2) * 3 == 9 rescue errors++
-try assert (3 * 3) ^ 2 == 81 rescue errors++
-try assert 3 * 3 ^ 2 == 27 rescue errors++
-try assert 4 * (3 + 3) == 24 rescue errors++
-try assert 60 % 21 // 2 == 9 rescue errors++
-try assert 63 % (21 // 2) == 3 rescue errors++
-
-a = 1
-try assert a++ == 1 rescue errors++
-try assert a == 2 rescue errors++
-try assert ++a == 3 rescue errors++
-try assert a-- == 3 rescue errors++
-try assert a == 2 rescue errors++
-try assert --a == 1 rescue errors++
+try assert 1 + 2 * 3 == 7 rescue errors += 1
+try assert (1 + 2) * 3 == 9 rescue errors += 1
+try assert (3 * 3) ^ 2 == 81 rescue errors += 1
+try assert 3 * 3 ^ 2 == 27 rescue errors += 1
+try assert 4 * (3 + 3) == 24 rescue errors += 1
+try assert 60 % 21 // 2 == 9 rescue errors += 1
+try assert 63 % (21 // 2) == 3 rescue errors += 1
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")

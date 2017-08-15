@@ -7,9 +7,9 @@ errors = 0
 
 a = 1
 b = 2
-try assert a == 1 and b == 2 rescue errors++
+try assert a == 1 and b == 2 rescue errors += 1
 
 a = b = 9
-try assert a == 9 and b == 9 rescue errors++
+try assert a == 9 and b == 9 rescue errors += 1
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
