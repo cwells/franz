@@ -185,10 +185,11 @@ class Interpreter(object):
 
     def assign_if(self, ast):
         var, val = ast
-        print("assign_if:ast", ast)
+        # print("assign_if:ast", ast)
         try:
             if isinstance(val, Tree): val = self.eval(val)
         except KeyError:
+            # print("assign_if:val", val)
             val = None
         if val:
             self.context[var] = val
