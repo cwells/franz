@@ -17,7 +17,7 @@ a = 8
 assert (a += 1) == 9
 assert (a -= 1) == 8
 assert (a /= 2) == 4.0
-assert a //= 2 == 2
+assert (a //= 2) == 2
 assert (a %= 2) == 0
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
