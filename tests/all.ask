@@ -4,6 +4,5 @@ include "tests/math"
 include "tests/args"
 include "tests/return"
 include "tests/yield"
-include "tests/array"
 include "tests/fibonacci"
 

@@ -70,9 +70,9 @@
     | factor "%" pow         -> mod
 
 ?pow: atom
-    | pow "^" atom           -> pow
-    | pow "[" expr "]"       -> subscript
-    | pow "[" expr? ":" expr? "]" -> slice
+    | pow "^" atom                  -> pow
+    | pow "[" expr "]"              -> subscript
+    | pow "[" expr? colon expr? "]" -> slice
 
 ?atom: INTEGER               -> integer
     | DECIMAL                -> decimal
@@ -91,6 +91,7 @@
     | "return" expr          -> return_expr
     | "[" arrayitem* "]"     -> array
 
+?colon: ":" -> colon
 ?args: expr ("," expr)*       -> args
 ?arrayitem: expr ("," expr)*  -> arrayitem
 

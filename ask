@@ -426,7 +426,18 @@ class Interpreter(object):
         raise ReturnException(retval)
 
     def slice(self, ast):
-        var, start, end = ast
+        var = ast[0]
+        if len(ast) == 4: # i:j
+            start, _, end = ast[1:]
+        elif len(ast) == 2: # :
+            start = 0
+            end = None
+        elif getattr(ast[1], 'data', None) == 'colon': # :j
+            start = None
+            end = ast[2]
+        else: # i:
+            start = ast[1]
+            end = None
         if isinstance(var, Tree): var = self.eval(var)
         if isinstance(start, Tree): start = self.eval(start)
         if isinstance(end, Tree): end = self.eval(end)
