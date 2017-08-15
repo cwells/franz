@@ -8,10 +8,12 @@
      | assign_div
      | assign_floor
      | assign_mod
+     | assign_if
      | assoc
      | ifcond
      | forloop
      | whileloop
+     | dowhile
      | irange
      | funcdef
      | "{" expr* "}"     -> block
@@ -31,12 +33,12 @@
 ?assign_div: name "/=" expr
 ?assign_mod: name "%=" expr
 ?assign_floor: name "//=" expr
+?assign_if: name "?=" expr
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
 ?funcdef: ("fn"|"ⲗ") "(" signature* ")" expr         -> funcdef
 ?signature: (name ":" name ("," name ":" name)*)     -> signature
-//?slice: expr "[" expr? ":" expr? "]"             -> slice
 ?assoc: (name|string) ":" expr                       -> assoc
 
 ?irange: expr "to" expr [ "step" expr ]
@@ -44,12 +46,14 @@
 ?forloop: "for" name "in" expr expr                  -> forloop
 ?ifcond: "if" expr expr [ "else" expr ]              -> ifcond
 ?whileloop: "while" expr expr                        -> whileloop
+?dowhile: "do" expr "while" expr                     -> dowhile
 ?assertion: "assert" expr                            -> assertion
 ?yield_expr: "yield" expr                            -> yield_expr
 ?break_expr: "break" expr*                           -> break_expr
 
 ?logic: cmp
-    | logic ("and"|"or") cmp -> cmp_log
+    | logic "and" cmp        -> cmp_and
+    | logic "or" cmp         -> cmp_or
 
 ?cmp: term
     | cmp "<" term           -> cmp_lt

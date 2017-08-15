@@ -12,4 +12,14 @@ try assert a == 1 and b == 2 rescue errors += 1
 a = b = 9
 try assert a == 9 and b == 9 rescue errors += 1
 
+a = 8
+try assert (a += 1) == 9 rescue errors += 1
+try assert (a -= 1) == 8  rescue errors += 1
+try assert (a /= 2) == 4.0 rescue errors += 1
+try assert (a //= 2) == 2 rescue errors += 1
+try assert (a %= 2) == 0 rescue errors += 1
+
+try assert (a ?= b) == b rescue errors += 1
+try assert (a ?= c) == a rescue errors += 1
+
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")

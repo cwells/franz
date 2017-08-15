@@ -183,6 +183,17 @@ class Interpreter(object):
         self.context[var] //= val
         return self.context[var]
 
+    def assign_if(self, ast):
+        var, val = ast
+        print("assign_if:ast", ast)
+        try:
+            if isinstance(val, Tree): val = self.eval(val)
+        except KeyError:
+            val = None
+        if val:
+            self.context[var] = val
+        return self.context[var]
+
     def assign_mod(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
@@ -286,15 +297,26 @@ class Interpreter(object):
         if isinstance(b, Tree): b = self.eval(b)
         return a >= b
 
-    def cmp_log(self, ast):
-        bools = { 'or': op.or_, 'and': op.and_ }
+    def cmp_and(self, ast):
         ast = copy(ast)
         branch = ast.pop(0)
         retval = self.eval(branch) if isinstance(branch, Tree) else branch
         while ast:
             logop, val = ast.pop(0), ast.pop(0)
+            if not retval: return False # short-circuit
             val = self.eval(val) if isinstance(val, Tree) else val
-            retval = bools[logop.value](retval, val)
+            retval = retval and val
+        return retval
+
+    def cmp_or(self, ast):
+        ast = copy(ast)
+        branch = ast.pop(0)
+        retval = self.eval(branch) if isinstance(branch, Tree) else branch
+        while ast:
+            logop, val = ast.pop(0), ast.pop(0)
+            if retval: return True # short-circuit
+            val = self.eval(val) if isinstance(val, Tree) else val
+            retval = retval or val
         return retval
 
     def cmp_lt(self, ast):
@@ -320,6 +342,14 @@ class Interpreter(object):
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a / b
+
+    def dowhile(self, ast):
+        block, condition = ast
+        while True:
+            retval = self.eval(block)
+            if not self.eval(condition):
+                break
+        return retval
 
     def expr(self, ast):
         return self.eval(ast[0])
@@ -383,11 +413,7 @@ class Interpreter(object):
         return a * b
 
     def name(self, ast):
-        try:
-            return self.context[ast[0].value]
-        except KeyError:
-            print("Unknown identifier: {}".format(ast[0].value))
-            exit(1)
+        return self.context[ast[0].value]
 
     def nil(self, ast):
         return None
