@@ -2,16 +2,20 @@
 
 from __future__ import absolute_import, print_function
 
-import re
+import time
 import operator as op
 import click
+import types
 from functools import partial
-from decorator import decorator
+from decorator import decorate
 from greenlet import greenlet
 from pprint import pprint
 from copy import copy
+import pdb
+from memory_profiler import show_results, LineProfiler
 from lark import Lark, Tree, InlineTransformer
 from lark.lexer import Token
+from lark.common import UnexpectedToken
 
 try:
     input = raw_input
@@ -31,12 +35,47 @@ typedecl = {
     'any':   lambda v: v
 }
 
+TRACE = False
+PROFILE = False
+DEBUG = False
+
+
+def trace(f):
+    def _trace(*args, **kw):
+        kwstr = ', '.join('%r: %r' % (k, kw[k]) for k in sorted(kw))
+        print("calling %s with args %s, {%s}" % (f.__name__, args, kwstr))
+        return f(*args, **kw)
+
+    return _trace if TRACE else f
+
+def profile(f):
+    def _profile(*args, **kwargs):
+            prof = LineProfiler() # backend=backend)
+            val = prof(f)(*args, **kwargs)
+            show_results(prof) # , stream=stream, precision=precision)
+            return val
+
+    return _profile if PROFILE else f
+
+def debug(f):
+    '''Decorator that places a break point right before calling the function.'''
+    def _debug(*args, **kwargs):
+        pdb.set_trace()  # XXX BREAKPOINT
+        return f(*args, **kwargs)
+
+    return _debug if DEBUG else f
+
 class ReturnException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+class SyntaxException(Exception):
     def __init__(self, value):
         self.value = value
 
 class InvalidArgument(Exception): pass
 class InvalidToken(Exception): pass
+
 
 class Atomize(InlineTransformer):
     integer = int
@@ -73,6 +112,9 @@ class Function(object):
         self.yield_to = None
         self.interpreter = None
 
+    @profile
+    @trace
+    @debug
     def __call__(self, context, name, *args, **kwargs):
         ctx = {}
         ctx.update(context)
@@ -81,23 +123,34 @@ class Function(object):
         self.interpreter.yield_expr = self.yield_expr # monkey-patch interpreter
         return self.interpreter.eval(self.code) if isinstance(self.code, Tree) else self.code.value
 
+    @profile
+    @trace
+    @debug
     def yield_expr(self, ast):
         item = self.interpreter.eval(ast)
         self.yield_to.switch(item) # jump to call method
         return item
 
-
 class LenFunction(Function):
+    @profile
+    @trace
+    @debug
     def __call__(self, context, name, *args, **kwargs):
         return len(kwargs['var'])
 
 
 class PrintFunction(Function):
+    @profile
+    @trace
+    @debug
     def __call__(self, context, name, *args, **kwargs):
         msg = str(kwargs['msg']).format(**context).replace('\\n', '\n')
         print(msg.format(context), end='')
         return msg
 
+class ListFunction(Function):
+    def __call__(self, context, name, *args, **kwargs):
+        return list(kwargs['iterable'])
 
 class Interpreter(object):
     def __init__(self, context=None):
@@ -106,6 +159,9 @@ class Interpreter(object):
     #
     # eval
     #
+    @profile
+    @trace
+    @debug
     def eval(self, ast):
         if isinstance(ast, list):
             retval = [ self.eval(b) for b in ast ]
@@ -124,16 +180,23 @@ class Interpreter(object):
     #
     fn_print = PrintFunction(signature = [ ('msg', typedecl['str']) ], code = print)
     fn_len   = LenFunction(signature   = [ ('var', typedecl['any']) ], code = len)
+    fn_list  = ListFunction(signature  = [ ('iterable', typedecl['any']) ], code = list)
 
     #
     # token actions (alphabetical)
     #
+    @profile
+    @trace
+    @debug
     def add(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a + b
 
+    @profile
+    @trace
+    @debug
     def args(self, ast):
         pargs = []
         nargs = {}
@@ -145,74 +208,173 @@ class Interpreter(object):
 
         return pargs, nargs
 
+    @profile
+    @trace
+    @debug
     def array(self, ast):
         retval = []
         for branch in ast:
             if isinstance(branch, Tree): branch = self.eval(branch)
-            retval.extend(branch)
+            for b in branch:
+                if isinstance(b, types.GeneratorType):
+                    retval.extend(list(b))
+                else:
+                    retval.append(b)
         return retval
 
+    @profile
+    @trace
+    @debug
     def arrayitem(self, ast):
         return [ self.eval(b) if isinstance(b, Tree) else b for b in ast ]
 
+    @profile
+    @trace
+    @debug
     def assertion(self, ast):
         condition = self.eval(ast[0])
         assert condition
         return condition
 
+    @profile
+    @trace
+    @debug
     def assign(self, ast):
         var, val = ast
         self.context[var.value] = self.eval(val)
         return self.context[var.value]
 
+    @profile
+    @trace
+    @debug
+    def assign_many(self, ast):
+        i = iter(ast)
+        names = []
+        values = []
+        for j in i:
+            if isinstance(j, Token):  # lvalue
+                names.append(j.value)
+            elif isinstance(j, Tree): # rvalue
+                values.append(self.eval(j))
+            else:
+                values.append(j)      # rvalue
+        for i, n in enumerate(names):
+            self.context[n] = values[i]
+        return values
+
+    @profile
+    @trace
+    @debug
+    def name_list(self, ast):
+        retval = []
+        for b in ast:
+            if isinstance(b, Tree): b = self.eval(b)
+            retval.append(b.value)
+        return retval
+
+    @profile
+    @trace
+    @debug
+    def rval_list(self, ast):
+        vals = []
+        for b in ast:
+            if isinstance(b, Tree):
+                try:
+                    b = self.eval(b)
+                except KeyError:
+                    continue
+            vals.append(b)
+        return vals
+
+    @profile
+    @trace
+    @debug
+    def assign_many_if(self, ast):
+        names, values = ast
+        if isinstance(names, Tree): names = self.eval(names)
+        if isinstance(values, Tree):
+            values = self.eval(values)
+        elif isinstance(values, Token):
+            values = self.context[values.value]
+        values = copy(values) # don't alter arguments
+        for name in names:
+            try:
+                v = values.pop(0)
+            except IndexError:
+                v = None
+            self.context[name] = v
+        return values
+
+    @profile
+    @trace
+    @debug
     def assign_add(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
         self.context[var] += val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assign_div(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
         self.context[var] /= val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assign_floor(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
         self.context[var] //= val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assign_if(self, ast):
         var, val = ast
-        # print("assign_if:ast", ast)
         try:
             if isinstance(val, Tree): val = self.eval(val)
         except KeyError:
-            # print("assign_if:val", val)
             val = None
         if val:
             self.context[var] = val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assign_mod(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
         self.context[var] %= val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assign_mul(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
         self.context[var] *= val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assign_sub(self, ast):
         var, val = ast
         if isinstance(val, Tree): val = self.eval(val)
         self.context[var] -= val
         return self.context[var]
 
+    @profile
+    @trace
+    @debug
     def assoc(self, ast):
         retval = {}
         branch = iter(ast)
@@ -222,12 +384,27 @@ class Interpreter(object):
             retval[key.value if hasattr(key, 'value') else key] = val
         return retval
 
+    @profile
+    @trace
+    @debug
     def block(self, ast):
         retval = None
         for branch in ast:
             retval = self.eval(branch)
         return retval
 
+    @profile
+    @trace
+    @debug
+    def chain(self, ast):
+        retval = ast[0]
+        for token in ast[1:]:
+            retval = Tree('call', [ token, Tree('args', [ retval ]) ])
+        return self.eval(retval)
+
+    @profile
+    @trace
+    @debug
     def call(self, ast):
         def validate(signature, pargs, nargs):
             sig = copy(signature)
@@ -261,13 +438,17 @@ class Interpreter(object):
         fn = self.context[name] if name in self.context else getattr(self, 'fn_' + name)
         args = validate(fn.signature, pargs=pargs, nargs=nargs)
 
-        yield_val = []
+        @profile
+        @trace
+        @debug
         def switch_handler(item):
-            while True:
-                yield_val.append(item)
+            while not fn_greenlet.dead:
+                yield item
                 item = fn_greenlet.switch()
-            return yield_val
 
+        @profile
+        @trace
+        @debug
         def catch_return(fn, context, name, **kwargs):
             try:
                 return fn(context=context, name=name, **kwargs)
@@ -276,28 +457,38 @@ class Interpreter(object):
 
         fn.yield_to = greenlet(switch_handler)
         fn_greenlet = greenlet(partial(catch_return, fn, self.context, name=name, **args))
-        retval = fn_greenlet.switch()
+        return fn_greenlet.switch()
 
-        return yield_val if yield_val else retval
-
+    @profile
+    @trace
+    @debug
     def cmp_eq(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a == b
 
+    @profile
+    @trace
+    @debug
     def cmp_gt(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a > b
 
+    @profile
+    @trace
+    @debug
     def cmp_gteq(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a >= b
 
+    @profile
+    @trace
+    @debug
     def cmp_and(self, ast):
         ast = copy(ast)
         branch = ast.pop(0)
@@ -309,6 +500,9 @@ class Interpreter(object):
             retval = retval and val
         return retval
 
+    @profile
+    @trace
+    @debug
     def cmp_or(self, ast):
         ast = copy(ast)
         branch = ast.pop(0)
@@ -320,30 +514,45 @@ class Interpreter(object):
             retval = retval or val
         return retval
 
+    @profile
+    @trace
+    @debug
     def cmp_lt(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a < b
 
+    @profile
+    @trace
+    @debug
     def cmp_lteq(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a <= b
 
+    @profile
+    @trace
+    @debug
     def cmp_neq(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a != b
 
+    @profile
+    @trace
+    @debug
     def div(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a / b
 
+    @profile
+    @trace
+    @debug
     def dowhile(self, ast):
         block, condition = ast
         while True:
@@ -352,15 +561,24 @@ class Interpreter(object):
                 break
         return retval
 
+    @profile
+    @trace
+    @debug
     def expr(self, ast):
         return self.eval(ast[0])
 
+    @profile
+    @trace
+    @debug
     def floor(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a // b
 
+    @profile
+    @trace
+    @debug
     def forloop(self, ast):
         var, iterable, block = ast
         var = var.value
@@ -371,6 +589,9 @@ class Interpreter(object):
             retval = self.eval(block)
         return retval
 
+    @profile
+    @trace
+    @debug
     def funcdef(self, ast):
         try:
             signature, block = ast
@@ -379,17 +600,26 @@ class Interpreter(object):
             signature = {}
         return Function(signature, block)
 
+    @profile
+    @trace
+    @debug
     def ifcond(self, ast):
         if self.eval(ast[0]):
             return self.eval(ast[1])
         elif len(ast) > 2:
             return self.eval(ast[2])
 
+    @profile
+    @trace
+    @debug
     def include_file(self, ast):
         filename = ast[0]
         ast = parser.parse(open(filename + EXTENSION, 'r').read())
         return self.eval(ast)
 
+    @profile
+    @trace
+    @debug
     def irange(self, ast):
         try:
             start, end = ast
@@ -401,47 +631,74 @@ class Interpreter(object):
         if isinstance(step, Tree): step = self.eval(step)
         return list(range(start, end + step // abs(step), step))
 
+    @profile
+    @trace
+    @debug
     def mod(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a % b
 
+    @profile
+    @trace
+    @debug
     def mul(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a * b
 
+    @profile
+    @trace
+    @debug
     def name(self, ast):
         return self.context[ast[0].value]
 
+    @profile
+    @trace
+    @debug
     def nil(self, ast):
         return None
 
+    @profile
+    @trace
+    @debug
     def pow(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a ** b
 
+    @profile
+    @trace
+    @debug
     def program(self, ast):
         retval = None
         for branch in ast:
             retval = self.eval(branch)
         return retval
 
+    @profile
+    @trace
+    @debug
     def regex(self, ast):
         '''not implemented
         '''
         print(ast)
         raise SystemExit
 
+    @profile
+    @trace
+    @debug
     def return_expr(self, ast):
         retval = ast[0] if ast else None
         if isinstance(retval, Tree): retval = self.eval(retval)
         raise ReturnException(retval)
 
+    @profile
+    @trace
+    @debug
     def slice(self, ast):
         var = ast[0]
         if len(ast) == 4: # i:j
@@ -460,18 +717,27 @@ class Interpreter(object):
         if isinstance(end, Tree): end = self.eval(end)
         return var[start:end]
 
+    @profile
+    @trace
+    @debug
     def sub(self, ast):
         a, b = ast
         if isinstance(a, Tree): a = self.eval(a)
         if isinstance(b, Tree): b = self.eval(b)
         return a - b
 
+    @profile
+    @trace
+    @debug
     def subscript(self, ast):
         var, index = ast
         if isinstance(var, Tree): var = self.eval(var)
         if isinstance(index, Tree): index = self.eval(index)
         return var[index]
 
+    @profile
+    @trace
+    @debug
     def tryrescue(self, ast):
         try:
             retval = self.eval(ast[0])
@@ -482,6 +748,9 @@ class Interpreter(object):
                 retval = self.eval(ast[2])
         return retval
 
+    @profile
+    @trace
+    @debug
     def whileloop(self, ast):
         condition, block = ast
         retval = None
@@ -490,23 +759,24 @@ class Interpreter(object):
         return retval
 
     def yield_expr(self, ast):
-        retval = [ self.eval(b) if isinstance(b, Tree) else ast for b in ast ]
-        return retval[-1]
+        raise SyntaxException("Yield keyword outside of function definition.")
 
 
 @click.command()
 @click.argument('program', type=click.Path(exists=True), required=False, default=None)
 @click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/ask.g')
 @click.option('--dump-tree', '-d', is_flag=True)
-def main(program, grammar, dump_tree):
+@click.option('--trace',     '-t', is_flag=True)
+def main(program, grammar, dump_tree, trace):
     interpreter = Interpreter()
 
     if program is not None:
         try:
             ast = parser.parse(open(program).read())
-        except:
+        except UnexpectedToken as e:
             print("=> Parse error")
-            raise
+            print(e)
+            exit(1)
         try:
             interpreter.eval(ast)
         except:

@@ -9,6 +9,8 @@
      | assign_floor
      | assign_mod
      | assign_if
+     | assign_many
+     | assign_many_if
      | assoc
      | ifcond
      | forloop
@@ -20,7 +22,6 @@
      | expr "+" expr     -> add
      | assertion
      | tryrescue
-     | yield_expr
      | break_expr
      | include_file
 
@@ -34,6 +35,11 @@
 ?assign_mod: name "%=" expr
 ?assign_floor: name "//=" expr
 ?assign_if: name "?=" expr
+?assign_many: "(" name ("," name)+ ")" "=" "(" expr ("," expr)+ ")"
+?assign_many_if: name_list "?=" rval_list
+
+?rval_list: ( "(" expr ("," expr)+ ")" | name )
+?name_list: ( "(" name ("," name)+ ")" )
 
 ?tryrescue: "try" expr "rescue" expr [ "else" expr ] -> tryrescue
 
@@ -48,7 +54,7 @@
 ?whileloop: "while" expr expr                        -> whileloop
 ?dowhile: "do" expr "while" expr                     -> dowhile
 ?assertion: "assert" expr                            -> assertion
-?yield_expr: "yield" expr                            -> yield_expr
+// ?yield_expr: "yield" expr                            -> yield_expr
 ?break_expr: "break" expr*                           -> break_expr
 
 ?logic: cmp
@@ -86,11 +92,15 @@
     | "true"                 -> true
     | "false"                -> false
     | "nil"                  -> nil
-    | name "(" args* ")"     -> call
     | "(" expr ")"           -> expr
     | "return" expr          -> return_expr
+    | "yield" expr           -> yield_expr
     | "[" arrayitem* "]"     -> array
+    | name "(" args* ")"     -> call
+    | name "(" args* ")" "->" name ("->" name)* -> chain
+//    | call
 
+// ?call: name "(" args* ")"
 ?colon: ":" -> colon
 ?args: expr ("," expr)*       -> args
 ?arrayitem: expr ("," expr)*  -> arrayitem
