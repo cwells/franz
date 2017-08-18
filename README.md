@@ -15,7 +15,8 @@ language will try to implement a particular set of features
 I'd like to see in real languages.
 
 One thing to note is that Franz is whitespace-sensitive in that you must have whitespace around tokens.
-e.g. `a - 1` is subtraction, whereas `a-1` is a variable or function named "a-1".
+e.g. `a - 1` is subtraction, whereas `a-1` is a variable or function named "a-1". This restriction allows
+you to use characters such as `-` or `?` as part of a variable or function name.
 
 Franz will accept a filename containing Franz source on the command line or 
 start a simple REPL if no file is provided.
