@@ -9,6 +9,9 @@ It's also my first attempt at language design, and this
 language will try to implement a particular set of features 
 I'd like to see in real languages.
 
+One thing to note is that Franz is whitespace-sensitive in that you must have whitespace around tokens.
+e.g. `a - 1` is subtraction, `a-1` is a variable or function named `a-1`.
+
 ```
 #
 # inefficient algorithm intentionally chosen
