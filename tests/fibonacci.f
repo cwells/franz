@@ -1,11 +1,13 @@
 #
-# this is actually the worst way to compute a fibonacci sequence
-# but I chose it because it tests recursion and nested scopes
+# let's do some fibonacci sequences
 #
 
 print("Testing fibonacci sequence (recursion, scope)...")
 errors = 0
 
+#
+# elegant, but extremely inefficient recursive algorithm
+#
 fibonacci-sequence = fn (start: int, end: int) {
     fibonacci-number = fn (nth: int)
         if nth <= 1
