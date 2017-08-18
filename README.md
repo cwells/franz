@@ -10,8 +10,7 @@ It's not fast, there are [serious bugs](https://github.com/cwells/franz/issues/1
 syntax is highly subject to change](https://github.com/cwells/franz/issues/2). It lacks major features 
 such as object support.
 
-It's also my first attempt at language design, and this 
-language will try to implement a particular set of features 
+It's also my first attempt at language design, with the goal of trying to implement a particular set of features 
 I'd like to see in real languages. This exercise is about language design, not language performance.
 
 One thing to note is that Franz is whitespace-sensitive in that you must have whitespace around tokens.
