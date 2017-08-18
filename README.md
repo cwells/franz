@@ -2,6 +2,7 @@
 
 # franz
 <img align="right" width="100" height="100" src="https://github.com/cwells/franz/blob/master/franz.png">
+
 Franz is a toy interpreter I've written using Python and [Lark](https://github.com/erezsh/lark). It's completely
 expression-oriented. Everything except for operators is an expression that evaluates to a sensible value. 
 
