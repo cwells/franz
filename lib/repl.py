@@ -44,11 +44,11 @@ def __repl(parser, interpreter):
             code_block = []
             prompt = '>>> '
             continue
-        elif s == '\h':
+        elif s in ('\h', '\?'):
             help()
             continue
         elif s == '\l':
-            print(last)
+            print(last, "\n")
             continue
         elif s == '\q':
             print("Exiting.\n")
@@ -63,7 +63,7 @@ def __repl(parser, interpreter):
             try:
                 print(ast.pretty())
             except UnboundLocalError:
-                print("\n")
+                pass
             continue
 
         code_block.append(s)
