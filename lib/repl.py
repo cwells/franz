@@ -8,15 +8,22 @@ readline.parse_and_bind('set editing-mode emacs')
 try: input = raw_input
 except NameError: pass
 
+COMMANDS = [
+    "\c to clear buffer",
+    "\s to show buffer",
+    "\l to show last successful expression",
+    "\T to show AST",
+    "\q (or ctrl+d) to quit"
+]
+
+def help():
+    for c in COMMANDS:
+        print("%s" % c)
+
+
 def repl(parser, interpreter):
     # naive repl
-    print("Franz v0.0")
-    print('\t'.join([
-        "\c to clear buffer",
-        "\s to show buffer",
-        "\l to show last successful expression",
-        "\T to show AST",
-    ]))
+    print("Franz v0.0 (\h for help)")
     readline.set_completer( lambda text, state: [
         c for c in sorted(interpreter.context) if c.startswith(text)
     ][state])
@@ -36,11 +43,16 @@ def repl(parser, interpreter):
             code_block = []
             prompt = '>>> '
             continue
-        elif s == '\s':
-            print('\n'.join(code_block))
+        elif s == '\h':
+            help()
             continue
         elif s == '\l':
             print(last)
+            continue
+        elif s == '\q':
+            raise SystemExit
+        elif s == '\s':
+            print('\n'.join(code_block))
             continue
         elif s == '\T':
             try:
