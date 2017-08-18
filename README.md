@@ -26,18 +26,18 @@ Calculating 25 numbers takes 13.28s on my computer.
 ```
 $ ./franz 
 Franz v0.0 (\h for help)
->>> fibonacci-sequence = fn (start: int, end: int) {
+>>> fibonacci-sequence = fn (n: int) {
 ...     fibonacci-number = fn (nth: int)
 ...         if nth <= 1
 ...             nth
 ...         else
 ...             fibonacci-number(nth - 1) + fibonacci-number(nth - 2)
 ... 
-...     for i in start to end
+...     for i in 1 to n
 ...         yield fibonacci-number(i)
 ... }
 <__main__.Function object at 0x7f514a14dfd0>
->>> sequence = [ fibonacci-sequence(start: 1, end: 20) ]
+>>> sequence = [ fibonacci-sequence(20) ]
 [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765]
 >>> 
 ```
