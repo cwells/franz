@@ -21,22 +21,25 @@ you to use characters such as `-` or `?` as part of a variable or function name.
 `./franz` will accept a filename containing Franz source on the command line or 
 start a simple REPL if no file is provided.
 
+Here's an implementation of a Fibnacci sequence. This is an inefficient but pretty algorithm.
+
 ```
-#
-# inefficient algorithm intentionally chosen
-#
-fibonacci-sequence = fn (start: int, end: int) {
-    fibonacci-number = fn (nth: int)
-        if nth <= 1
-            nth
-        else
-            fibonacci-number(nth - 1) + fibonacci-number(nth - 2)
-
-    for i in start to end
-        yield fibonacci-number(i)
-}
-
-sequence = [ fibonacci-sequence(start: 1, end: 20) ]
+$ ./franz 
+Franz v0.0 (\h for help)
+>>> fibonacci-sequence = fn (start: int, end: int) {
+...     fibonacci-number = fn (nth: int)
+...         if nth <= 1
+...             nth
+...         else
+...             fibonacci-number(nth - 1) + fibonacci-number(nth - 2)
+... 
+...     for i in start to end
+...         yield fibonacci-number(i)
+... }
+<__main__.Function object at 0x7f514a14dfd0>
+>>> sequence = [ fibonacci-sequence(start: 1, end: 20) ]
+[1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765]
+>>> 
 ```
 
 See the [tests/](https://github.com/cwells/franz/tree/master/tests) directory for more examples.
