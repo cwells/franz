@@ -38,3 +38,5 @@ fibonacci-sequence = fn (start: int, end: int) {
 
 sequence = [ fibonacci-sequence(start: 1, end: 20) ]
 ```
+
+See the [tests/](https://github.com/cwells/franz/tree/master/tests) directory for more examples.
