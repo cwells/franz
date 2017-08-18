@@ -25,9 +25,9 @@ c = fn (iter: list)
     for i in iter
         yield i ^ 2
 
-pipes = [ a(1 to 4) -> b -> c ]
+pipes  = [ a(1 to 4) -> b -> c ]
 nested = [ c(b(a(1 to 4))) ]
-known = [ 1, 16, 81, 256 ]
+known  = [ 1, 16, 81, 256 ]
 
 try assert pipes == nested rescue errors += 1
 try assert nested == known rescue errors += 1
