@@ -55,7 +55,10 @@ Franz v0.0 (\h for help)
 >>> sequence = [ fibonacci-sequence(20) ]
 [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765]
 >>> 
-
 ```
+
+Of interest in the second example is the fact that `yield a` is an expression that evaluates to `a`, 
+so it can be used in subsequent expressions.
+
 
 See the [tests/](https://github.com/cwells/franz/tree/master/tests) directory for more examples.
