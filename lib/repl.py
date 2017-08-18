@@ -20,11 +20,10 @@ def help():
     for c in COMMANDS:
         print("%s" % c)
 
-
 def repl(parser, interpreter):
     # naive repl
     print("Franz v0.0 (\h for help)")
-    readline.set_completer( lambda text, state: [
+    readline.set_completer(lambda text, state: [
         c for c in sorted(interpreter.context) if c.startswith(text)
     ][state])
     readline.parse_and_bind("tab: complete")
