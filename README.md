@@ -20,7 +20,8 @@ you to use characters such as `-` or `?` as part of a variable or function name.
 `./franz` will accept a filename containing Franz source on the command line or 
 start a simple REPL if no file is provided.
 
-Here's an implementation of a Fibonacci sequence. This is an inefficient but pretty algorithm.
+Here's a recursive implementation of a Fibonacci sequence. This is an elegant, but inefficient algorithm. 
+Calculating 25 numbers takes 13.28s on my computer. 
 
 ```
 $ ./franz 
@@ -41,7 +42,7 @@ Franz v0.0 (\h for help)
 >>> 
 ```
 
-Faster Fibonacci generator
+Faster Fibonacci generator. Calculating 25 numbers takes 0.001s on my computer. 10,000 numbers takes only 1.24s.
 ```
 $ ./franz 
 Franz v0.0 (\h for help)
