@@ -37,7 +37,7 @@ Franz v0.0 (\h for help)
 ...         yield fibonacci-number(i)
 ... }
 <__main__.Function object at 0x7f514a14dfd0>
->>> sequence = [ fibonacci-sequence(n: 20) ]
+>>> sequence = [ fibonacci-sequence(20) ]
 [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765]
 >>> 
 ```
