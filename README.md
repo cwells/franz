@@ -1,7 +1,8 @@
 # franz
 Simple expression-oriented language written in Python
 
-Franz is a toy interpreter I've written using Python and [Lark](https://github.com/erezsh/lark)
+Franz is a toy interpreter I've written using Python and [Lark](https://github.com/erezsh/lark).
+
 It's not fast, there are bugs, and it's not done. 
 
 It's also my first attempt at language design, and this 
