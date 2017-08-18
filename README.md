@@ -1,4 +1,4 @@
-> "K. does not know whether this is some sort of joke or not." ~ Franz Kafka, The Trial
+> _K. does not know whether this is some sort of joke or not._ ~ Franz Kafka, The Trial
 
 # franz
 Simple expression-oriented language written in Python
