@@ -38,6 +38,6 @@ scan = fn (n: int) {
     }
 }
 
-assert scan(100) == 1 to 100
+try assert scan(100) == 1 to 100 rescue errors += 1
 
 print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
