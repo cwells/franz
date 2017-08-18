@@ -12,7 +12,7 @@ such as OO support.
 
 It's also my first attempt at language design, and this 
 language will try to implement a particular set of features 
-I'd like to see in real languages.
+I'd like to see in real languages. This exercise is about language design, not language performance.
 
 One thing to note is that Franz is whitespace-sensitive in that you must have whitespace around tokens.
 e.g. `a - 1` is subtraction, whereas `a-1` is a variable or function named "a-1". This restriction allows
