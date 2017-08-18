@@ -1,6 +1,8 @@
 > _K. does not know whether this is some sort of joke or not._ ~ Franz Kafka, _The Trial_
 
 # franz
+<img align="right" width="100" height="100" src="https://github.com/cwells/franz/blob/master/franz.png">
+
 Simple expression-oriented language written in Python
 
 Franz is a toy interpreter I've written using Python and [Lark](https://github.com/erezsh/lark).
@@ -34,4 +36,3 @@ fibonacci-sequence = fn (start: int, end: int) {
 
 sequence = [ fibonacci-sequence(start: 1, end: 20) ]
 ```
-
