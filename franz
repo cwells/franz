@@ -64,9 +64,9 @@ class Atomize(InlineTransformer):
         ''' converts form a(args) -> b -> c into form c(b(a(args)))
         '''
         first, args, *rest = args
-        retval = (Tree('call', [ first, args ]))
+        retval = Tree('call', [ first, args ])
         for token in rest:
-            retval =  Tree('call', [ token, Tree('args', [ retval ]) ])
+            retval = Tree('call', [ token, Tree('args', [ retval ]) ])
         return retval
 
 try:
