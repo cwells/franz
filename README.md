@@ -20,7 +20,7 @@ you to use characters such as `-` or `?` as part of a variable or function name.
 `./franz` will accept a filename containing Franz source on the command line or 
 start a simple REPL if no file is provided.
 
-Here's an implementation of a Fibnacci sequence. This is an inefficient but pretty algorithm.
+Here's an implementation of a Fibonacci sequence. This is an inefficient but pretty algorithm.
 
 ```
 $ ./franz 
