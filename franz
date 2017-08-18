@@ -10,20 +10,18 @@ from functools import partial
 from decorator import decorate
 from greenlet import greenlet
 from pprint import pprint
-from copy import copy
+from copy import copy, deepcopy
 import pdb
-from memory_profiler import show_results, LineProfiler
 from lark import Lark, Tree, InlineTransformer
 from lark.lexer import Token
 from lark.common import UnexpectedToken
 
-try:
-    input = raw_input
-except NameError:
-    pass
+from lib.debug import trace, profile, debug
+from lib.repl import repl
 
-GRAMMAR = 'grammars/ask.g'
-EXTENSION = '.ask'
+
+GRAMMAR = 'grammars/franz.g'
+EXTENSION = '.f'
 
 typedecl = {
     'int':   int,
@@ -35,35 +33,6 @@ typedecl = {
     'any':   lambda v: v
 }
 
-TRACE = False
-PROFILE = False
-DEBUG = False
-
-
-def trace(f):
-    def _trace(*args, **kw):
-        kwstr = ', '.join('%r: %r' % (k, kw[k]) for k in sorted(kw))
-        print("calling %s with args %s, {%s}" % (f.__name__, args, kwstr))
-        return f(*args, **kw)
-
-    return _trace if TRACE else f
-
-def profile(f):
-    def _profile(*args, **kwargs):
-            prof = LineProfiler() # backend=backend)
-            val = prof(f)(*args, **kwargs)
-            show_results(prof) # , stream=stream, precision=precision)
-            return val
-
-    return _profile if PROFILE else f
-
-def debug(f):
-    '''Decorator that places a break point right before calling the function.'''
-    def _debug(*args, **kwargs):
-        pdb.set_trace()  # XXX BREAKPOINT
-        return f(*args, **kwargs)
-
-    return _debug if DEBUG else f
 
 class ReturnException(Exception):
     def __init__(self, value):
@@ -75,7 +44,6 @@ class SyntaxException(Exception):
 
 class InvalidArgument(Exception): pass
 class InvalidToken(Exception): pass
-
 
 class Atomize(InlineTransformer):
     integer = int
@@ -94,6 +62,15 @@ class Atomize(InlineTransformer):
             sig.append((param, typedecl.get(paramtype, None)))
         return sig
 
+    def chain(self, *args):
+        ''' converts form a(args) -> b -> c into form c(b(a(args)))
+        '''
+        first, args, *rest = args
+        retval = (Tree('call', [ first, args ]))
+        for token in rest:
+            retval =  Tree('call', [ token, Tree('args', [ retval ]) ])
+        return retval
+
 try:
     parser = Lark(
         open(GRAMMAR).read(),
@@ -105,22 +82,26 @@ except:
     print("=> Grammar error")
     raise
 
+
 class Function(object):
-    def __init__(self, signature, code):
+    def __init__(self, name, signature, code, context, yield_to):
+        self.name = name
         self.signature = signature
         self.code = code
-        self.yield_to = None
-        self.interpreter = None
+        self.context = {}
+        self.context.update(context)
+        self.yield_to = yield_to
+
+    def prepare(self):
+        # because Interpreter isn't defined til later
+        self.interpreter = Interpreter(context=self.context)
+        self.interpreter.yield_expr = self.yield_expr # monkey-patch interpreter
 
     @profile
     @trace
     @debug
-    def __call__(self, context, name, *args, **kwargs):
-        ctx = {}
-        ctx.update(context)
-        ctx.update(kwargs)
-        self.interpreter = Interpreter(context=ctx)
-        self.interpreter.yield_expr = self.yield_expr # monkey-patch interpreter
+    def __call__(self, *args, **kwargs):
+        self.context.update(kwargs)
         return self.interpreter.eval(self.code) if isinstance(self.code, Tree) else self.code.value
 
     @profile
@@ -131,26 +112,6 @@ class Function(object):
         self.yield_to.switch(item) # jump to call method
         return item
 
-class LenFunction(Function):
-    @profile
-    @trace
-    @debug
-    def __call__(self, context, name, *args, **kwargs):
-        return len(kwargs['var'])
-
-
-class PrintFunction(Function):
-    @profile
-    @trace
-    @debug
-    def __call__(self, context, name, *args, **kwargs):
-        msg = str(kwargs['msg']).format(**context).replace('\\n', '\n')
-        print(msg.format(context), end='')
-        return msg
-
-class ListFunction(Function):
-    def __call__(self, context, name, *args, **kwargs):
-        return list(kwargs['iterable'])
 
 class Interpreter(object):
     def __init__(self, context=None):
@@ -178,9 +139,19 @@ class Interpreter(object):
     #
     # builtin functions
     #
-    fn_print = PrintFunction(signature = [ ('msg', typedecl['str']) ], code = print)
-    fn_len   = LenFunction(signature   = [ ('var', typedecl['any']) ], code = len)
-    fn_list  = ListFunction(signature  = [ ('iterable', typedecl['any']) ], code = list)
+    def fn_print(self, *args, **kwargs):
+        strings = []
+        for arg in args:
+            msg = str(arg).format(**self.context).replace('\\n', '\n')
+            strings.append(msg)
+        print(*strings, end='')
+        return ' '.join(strings)
+
+    def fn_list(self, obj):
+        return list(obj)
+
+    def fn_type(self, obj):
+        return type(obj)
 
     #
     # token actions (alphabetical)
@@ -396,15 +367,6 @@ class Interpreter(object):
     @profile
     @trace
     @debug
-    def chain(self, ast):
-        retval = ast[0]
-        for token in ast[1:]:
-            retval = Tree('call', [ token, Tree('args', [ retval ]) ])
-        return self.eval(retval)
-
-    @profile
-    @trace
-    @debug
     def call(self, ast):
         def validate(signature, pargs, nargs):
             sig = copy(signature)
@@ -435,8 +397,6 @@ class Interpreter(object):
             pargs, nargs = aargs[0]
         except IndexError:
             pass
-        fn = self.context[name] if name in self.context else getattr(self, 'fn_' + name)
-        args = validate(fn.signature, pargs=pargs, nargs=nargs)
 
         @profile
         @trace
@@ -449,15 +409,25 @@ class Interpreter(object):
         @profile
         @trace
         @debug
-        def catch_return(fn, context, name, **kwargs):
+        def catch_return(fn, **kwargs):
             try:
-                return fn(context=context, name=name, **kwargs)
+                return fn(*args, **kwargs)
             except ReturnException as e:
                 return e.value
 
-        fn.yield_to = greenlet(switch_handler)
-        fn_greenlet = greenlet(partial(catch_return, fn, self.context, name=name, **args))
-        return fn_greenlet.switch()
+        if name in self.context: # user-defined function
+            defn = self.context[name]
+            yield_to = greenlet(switch_handler)
+            fn = Function(name, defn.signature, defn.code, self.context, yield_to)
+            fn.prepare()
+            args = validate(fn.signature, pargs=pargs, nargs=nargs)
+            fn_greenlet = greenlet(partial(catch_return, fn, **args))
+            return fn_greenlet.switch()
+
+        else: # builtin function
+            fn = getattr(self, 'fn_' + name)
+            return fn(*pargs, **nargs)
+
 
     @profile
     @trace
@@ -584,7 +554,6 @@ class Interpreter(object):
         var = var.value
         iterable = self.eval(iterable)
         retval = None
-
         for self.context[var] in iterable:
             retval = self.eval(block)
         return retval
@@ -598,7 +567,7 @@ class Interpreter(object):
         except ValueError:
             block = ast[0]
             signature = {}
-        return Function(signature, block)
+        return Function(None, signature, block, context={}, yield_to=None)
 
     @profile
     @trace
@@ -653,7 +622,10 @@ class Interpreter(object):
     @trace
     @debug
     def name(self, ast):
-        return self.context[ast[0].value]
+        try:
+            return self.context[ast[0].value]
+        except KeyError:
+            raise NameError("Name `%s` is not defined" % ast[0])
 
     @profile
     @trace
@@ -678,15 +650,6 @@ class Interpreter(object):
         for branch in ast:
             retval = self.eval(branch)
         return retval
-
-    @profile
-    @trace
-    @debug
-    def regex(self, ast):
-        '''not implemented
-        '''
-        print(ast)
-        raise SystemExit
 
     @profile
     @trace
@@ -764,7 +727,7 @@ class Interpreter(object):
 
 @click.command()
 @click.argument('program', type=click.Path(exists=True), required=False, default=None)
-@click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/ask.g')
+@click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/franz.g')
 @click.option('--dump-tree', '-d', is_flag=True)
 @click.option('--trace',     '-t', is_flag=True)
 def main(program, grammar, dump_tree, trace):
@@ -784,29 +747,9 @@ def main(program, grammar, dump_tree, trace):
             raise
         finally:
             if dump_tree: print(ast.pretty())
-        raise SystemExit
 
-    # naive repl
-    while True:
-        try:
-            s = input('> ')
-        except EOFError:
-            break
-        if not s:
-            continue
-
-        try:
-            ast = parser.parse(s)
-        except Exception as e:
-            print(e)
-            continue
-
-        try:
-            print(interpreter.eval(ast))
-        except Exception as e:
-            print(e)
-            continue
-
+    else:
+        repl(parser, interpreter)
 
 if __name__ == '__main__':
     main()

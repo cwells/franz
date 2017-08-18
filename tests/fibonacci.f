@@ -6,20 +6,18 @@
 print("Testing fibonacci sequence (recursion, scope)...")
 errors = 0
 
-fibonacci_sequence = fn (start: int, end: int) {
-    fibonacci_number = fn (nth: int)
+fibonacci-sequence = fn (start: int, end: int) {
+    fibonacci-number = fn (nth: int)
         if nth <= 1
             nth
         else
-            fibonacci_number(nth - 1) + fibonacci_number(nth - 2)
+            fibonacci-number(nth - 1) + fibonacci-number(nth - 2)
 
-    retval = []
     for i in start to end
-        retval += [ fibonacci_number(i) ]
-    retval
+        yield fibonacci-number(i)
 }
 
-sequence = fibonacci_sequence(start: 1, end: 20)
+sequence = [ fibonacci-sequence(start: 1, end: 20) ]
 
 try assert sequence == [
     1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144,

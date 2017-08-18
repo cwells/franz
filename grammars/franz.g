@@ -109,7 +109,7 @@
 ?string: STRING
 
 COMMENT: /\#[^\n]*/
-NAME: ( (LETTER|"_") | "@" LETTER) ("_"|"?"|"!"|LETTER|DIGIT )*
+NAME: ( (LETTER|"_") | "@" LETTER) ("-"|"_"|"?"|"!"|"%"|"$"|LETTER|DIGIT )*
 DECIMAL: INTEGER "." DIGIT+
 AND: "and"
 OR: "or"
