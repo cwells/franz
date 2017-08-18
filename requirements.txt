@@ -1,4 +1,4 @@
-click
-lark
-greenlet
-memory_profiler
+git+https://github.com/erezsh/lark.git@e7edae0604f2a54b5b55a9a6ab55c2a6d7fb9413
+click>=6.6
+greenlet>=0.4.12
+memory-profiler>=0.47
