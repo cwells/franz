@@ -1,29 +1,29 @@
 ?program: expr*
 
-?expr: logic [";"]
-     | assign [";"]
-     | assign_add [";"]
-     | assign_sub [";"]
-     | assign_mul [";"]
-     | assign_div [";"]
-     | assign_floor [";"]
-     | assign_mod [";"]
-     | assign_if [";"]
-     | assign_many [";"]
+?expr: logic          [";"]
+     | assign         [";"]
+     | assign_add     [";"]
+     | assign_sub     [";"]
+     | assign_mul     [";"]
+     | assign_div     [";"]
+     | assign_floor   [";"]
+     | assign_mod     [";"]
+     | assign_if      [";"]
+     | assign_many    [";"]
      | assign_many_if [";"]
-     | assoc [";"]
-     | ifcond [";"]
-     | forloop [";"]
-     | whileloop [";"]
-     | dowhile [";"]
-     | irange [";"]
-     | funcdef [";"]
-     | "{" expr* "}" [";"]     -> block
-     | expr "+" expr [";"]     -> add
-     | assertion [";"]
-     | tryrescue [";"]
-     | break_expr [";"]
-     | include_file [";"]
+     | assoc          [";"]
+     | ifcond         [";"]
+     | forloop        [";"]
+     | whileloop      [";"]
+     | dowhile        [";"]
+     | irange         [";"]
+     | funcdef        [";"]
+     | "{" expr* "}"  [";"]     -> block
+     | expr "+" expr  [";"]     -> add
+     | assertion      [";"]
+     | tryrescue      [";"]
+     | break_expr     [";"]
+     | include_file   [";"]
 
 ?include_file: "include" expr                        -> include_file
 
