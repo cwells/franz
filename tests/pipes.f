@@ -1,5 +1,13 @@
 #
-# pipes
+# test pipes
+#
+
+#
+# BUG: https://github.com/cwells/franz/issues/1
+#
+# These tests coerce the generator argument to
+# a list in order to bypass bug #1, but this isn't
+# currently working as intended.
 #
 
 print("Test pipes...")
@@ -24,4 +32,4 @@ known = [ 1, 16, 81, 256 ]
 try assert pipes == nested rescue errors += 1
 try assert pipes == known rescue errors += 1
 
-print(if errors "Some tests failed ({errors}) errors\n" else "passed!\n")
+print(if errors "Some tests failed ({errors}) errors\n" else "Passed with caveat: see source code of this test.\n")
