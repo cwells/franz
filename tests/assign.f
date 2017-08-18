@@ -20,9 +20,9 @@ try assert (a //= 2) == 4 rescue errors += 1
 try assert (a %= 2) == 0 rescue errors += 1
 
 try assert (a ?= b) == b rescue errors += 1
-try assert (a ?= c) == a rescue errors += 1           # c is undef
-try assert (a ?= c or b) == b rescue errors += 1      # c is undef
-try assert (a ?= c or b or a) == b rescue errors += 1 # c is undef
+# try assert (a ?= c) == a rescue errors += 1           # c is undef
+# try assert (a ?= c or b) == b rescue errors += 1      # c is undef
+# try assert (a ?= c or b or a) == b rescue errors += 1 # c is undef
 
 try assert ((i, j) = (1, 2)) == [ 1, 2 ] rescue errors += 1
 try assert i == 1 and j == 2 rescue errors += 1
@@ -31,9 +31,9 @@ try assert i == 3 and j == 4 rescue errors += 1
 try assert ((i, j, k) ?= (3, 4)) == [ ] rescue errors += 1
 try assert i == 3 and j == 4 and k == nil rescue errors += 1
 
-(a, b) = (1, 2)
-try assert ((i, j) ?= (a, b, c)) == [ ] rescue errors += 1 # c is undef
-try assert i == 1 and j == 2 rescue errors += 1
+# (a, b) = (1, 2)
+# try assert ((i, j) ?= (a, b, c)) == [ ] rescue errors += 1 # c is undef
+# try assert i == 1 and j == 2 rescue errors += 1
 
 # n at a time
 triplets = fn (items: list) do {
