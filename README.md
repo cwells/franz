@@ -2,13 +2,11 @@
 
 # franz
 <img align="right" width="100" height="100" src="https://github.com/cwells/franz/blob/master/franz.png">
+Franz is a toy interpreter I've written using Python and [Lark](https://github.com/erezsh/lark). It's completely
+expression-oriented. Everything except for operators is an expression that evaluates to a sensible value. 
 
-Simple expression-oriented language written in Python
-
-Franz is a toy interpreter I've written using Python and [Lark](https://github.com/erezsh/lark).
-
-It's not fast, there are [bugs](https://github.com/cwells/franz/issues/1), and it's not done. Even the basic 
-syntax is [highly subject to change](https://github.com/cwells/franz/issues/2).
+It's not fast, there are serious [bugs](https://github.com/cwells/franz/issues/1), and it's not done. [Even the basic 
+syntax is highly subject to change](https://github.com/cwells/franz/issues/2).
 
 It's also my first attempt at language design, and this 
 language will try to implement a particular set of features 
