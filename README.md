@@ -41,4 +41,21 @@ Franz v0.0 (\h for help)
 >>> 
 ```
 
+Faster Fibonacci generator
+```
+$ ./franz 
+Franz v0.0 (\h for help)
+>>> fibonacci-sequence = fn (n: int) {
+...     a = b = 1
+...     for i in 3 to n + 2
+...         (a, b) = (b, (yield a) + b)
+... }
+<__main__.Function object at 0x7f07d9cbc160>
+>>> 
+>>> sequence = [ fibonacci-sequence(20) ]
+[1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765]
+>>> 
+
+```
+
 See the [tests/](https://github.com/cwells/franz/tree/master/tests) directory for more examples.
