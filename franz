@@ -236,30 +236,6 @@ class Interpreter(object):
     @profile
     @trace
     @debug
-    def name_list(self, ast):
-        retval = []
-        for b in ast:
-            if isinstance(b, Tree): b = self.eval(b)
-            retval.append(b.value)
-        return retval
-
-    @profile
-    @trace
-    @debug
-    def rval_list(self, ast):
-        vals = []
-        for b in ast:
-            if isinstance(b, Tree):
-                try:
-                    b = self.eval(b)
-                except KeyError:
-                    continue
-            vals.append(b)
-        return vals
-
-    @profile
-    @trace
-    @debug
     def assign_many_if(self, ast):
         names, values = ast
         if isinstance(names, Tree): names = self.eval(names)
@@ -630,6 +606,16 @@ class Interpreter(object):
     @profile
     @trace
     @debug
+    def name_list(self, ast):
+        retval = []
+        for b in ast:
+            if isinstance(b, Tree): b = self.eval(b)
+            retval.append(b.value)
+        return retval
+
+    @profile
+    @trace
+    @debug
     def nil(self, ast):
         return None
 
@@ -658,6 +644,20 @@ class Interpreter(object):
         retval = ast[0] if ast else None
         if isinstance(retval, Tree): retval = self.eval(retval)
         raise ReturnException(retval)
+
+    @profile
+    @trace
+    @debug
+    def rval_list(self, ast):
+        vals = []
+        for b in ast:
+            if isinstance(b, Tree):
+                try:
+                    b = self.eval(b)
+                except KeyError:
+                    continue
+            vals.append(b)
+        return vals
 
     @profile
     @trace
