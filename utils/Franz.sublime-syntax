@@ -2,19 +2,19 @@
 ---
 # See http://www.sublimetext.com/docs/3/syntax.html
 file_extensions:
-  - ask
-scope: source.ask
+  - f
+scope: source.franz
 contexts:
   main:
     # Strings begin and end with quotes, and use backslashes as an escape
     # character
     - match: '"'
-      scope: punctuation.definition.string.begin.ask
+      scope: punctuation.definition.string.begin.franz
       push: double_quoted_string
 
     # Comments begin with a '#' and finish at the end of the line
     - match: '#'
-      scope: punctuation.definition.comment.ask
+      scope: punctuation.definition.comment.franz
       push: line_comment
 
     # Note that blackslashes don't need to be escaped within single quoted
