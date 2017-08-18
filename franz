@@ -43,7 +43,7 @@ class SyntaxException(Exception):
 class InvalidArgument(Exception): pass
 class InvalidToken(Exception): pass
 
-class Atomize(InlineTransformer):
+class AstTransformer(InlineTransformer):
     integer = int
     decimal = float
     string  = lambda _, v: str(v[1:-1] if v[0] == v[-1] == '"' else v)
@@ -74,7 +74,7 @@ try:
         open(GRAMMAR).read(),
         start       = 'program',
         parser      = 'lalr',
-        transformer = Atomize()
+        transformer = AstTransformer()
     )
 except:
     print("=> Grammar error")
