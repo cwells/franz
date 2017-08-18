@@ -1,6 +1,6 @@
 > _K. does not know whether this is some sort of joke or not._ ~ Franz Kafka, _The Trial_
 
-# franz
+# Franz
 <img align="right" width="100" height="100" src="https://github.com/cwells/franz/blob/master/franz.png">
 
 Franz is a toy interpreter I've implemented using Python and [Lark](https://github.com/erezsh/lark). It's completely
