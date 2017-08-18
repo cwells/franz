@@ -4,7 +4,7 @@
 <img align="right" width="100" height="100" src="https://github.com/cwells/franz/blob/master/franz.png">
 
 Franz is a toy interpreter I've implemented using Python and [Lark](https://github.com/erezsh/lark). It's completely
-expression-oriented. Everything except for operators is an expression that evaluates to a sensible value. 
+expression-oriented; everything except for operators is an expression that evaluates to a sensible value. 
 
 It's not fast, there are [serious bugs](https://github.com/cwells/franz/issues/1), and it's not done. [Even the basic 
 syntax is highly subject to change](https://github.com/cwells/franz/issues/2). It lacks major features 
