@@ -8,7 +8,7 @@ expression-oriented. Everything except for operators is an expression that evalu
 
 It's not fast, there are [serious bugs](https://github.com/cwells/franz/issues/1), and it's not done. [Even the basic 
 syntax is highly subject to change](https://github.com/cwells/franz/issues/2). It lacks major features 
-such as OO support.
+such as object support.
 
 It's also my first attempt at language design, and this 
 language will try to implement a particular set of features 
