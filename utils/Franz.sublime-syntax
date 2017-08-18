@@ -53,11 +53,11 @@ contexts:
       scope: punctuation.separator
 
     # operators
-    - match: '([*+\-^=<>%/]+)'
+    - match: '\s+([*+\-^=<>%/]+)\s+'
       scope: keyword.operator
 
     # function definition
-    - match: '([a-zA-Z][a-zA-Z0-9_!?]*)\s*(=)\s*(fn)'
+    - match: '([a-zA-Z][a-zA-Z0-9_!?\-%$]*)\s*(=)\s*(fn)'
       captures:
         1: entity.name.function.constructor
         2: keyword.operator
