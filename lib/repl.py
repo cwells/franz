@@ -1,4 +1,5 @@
 import readline
+import time
 from lark.common import UnexpectedToken
 from lark.lexer import UnexpectedInput
 
@@ -12,6 +13,7 @@ COMMANDS = [
     "\c to clear buffer",
     "\s to show buffer",
     "\l to show last successful expression",
+    "\\t <expr> to time execution of <expr>",
     "\T to show AST",
     "\q (or ctrl+d) to quit"
 ]
@@ -20,21 +22,21 @@ def help():
     for c in COMMANDS:
         print("%s" % c)
 
-def repl(parser, interpreter):
+def __repl(parser, interpreter):
     # naive repl
-    print("Franz v0.0 (\h for help)")
-    readline.set_completer(lambda text, state: [
-        c for c in sorted(interpreter.context) if c.startswith(text)
-    ][state])
-    readline.parse_and_bind("tab: complete")
     code_block = []
     last = ''
     prompt = '>>> '
+
     while True:
+        start_eval_time = None
+
         try:
             s = input(prompt)
         except EOFError:
-            break
+            print("Exiting.\n")
+            raise SystemExit
+
         if not s:
             continue
 
@@ -49,10 +51,14 @@ def repl(parser, interpreter):
             print(last)
             continue
         elif s == '\q':
+            print("Exiting.\n")
             raise SystemExit
         elif s == '\s':
             print('\n'.join(code_block))
             continue
+        elif s.startswith('\\t'):
+            start_eval_time = time.time()
+            s = s[2:]
         elif s == '\T':
             try:
                 print(ast.pretty())
@@ -84,4 +90,18 @@ def repl(parser, interpreter):
         else:
             if retval: print(repr(retval))
             last = s
+            if start_eval_time is not None:
+                print("Runtime:", time.time() - start_eval_time)
 
+def repl(parser, interpreter):
+    print("Franz v0.0 (\h for help)")
+    readline.set_completer(lambda text, state: [
+        c for c in sorted(interpreter.context) if c.startswith(text)
+    ][state])
+    readline.parse_and_bind("tab: complete")
+
+    while True:
+        try:
+            __repl(parser, interpreter)
+        except KeyboardInterrupt:
+            continue
