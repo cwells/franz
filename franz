@@ -140,12 +140,25 @@ class Interpreter(object):
     # builtin functions
     #
     def fn_print(self, *args, **kwargs):
+        class VarWriter():
+            def __init__(self):
+                self._value = []
+
+            def write(self, s):
+                self._value.append(s)
+
+            def value(self):
+                return ''.join(self._value)
+
         strings = []
         for arg in args:
             msg = str(arg).format(**self.context).replace('\\n', '\n')
             strings.append(msg)
-        print(*strings, end='')
-        return ' '.join(strings)
+
+        retval = VarWriter()
+        print(*strings, end='', file=retval)
+        print(retval.value(), end='')
+        return retval.value()
 
     def fn_list(self, obj):
         return list(obj)
