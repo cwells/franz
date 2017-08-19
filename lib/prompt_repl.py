@@ -2,6 +2,10 @@ import time
 
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
+from prompt_toolkit.styles import style_from_dict
+from prompt_toolkit.token import Token
 
 from lark.common import UnexpectedToken
 from lark.lexer import UnexpectedInput
@@ -19,16 +23,29 @@ def help():
     for c in COMMANDS:
         print("%s" % c)
 
+
+style = style_from_dict({
+    Token.Toolbar: '#ffffff bg:#333333',
+})
+
 def __repl(parser, interpreter):
     code_block = []
     last = ''
+    toolbar_value = ''
+    history = InMemoryHistory()
 
     while True:
         name_completer = WordCompleter(sorted(interpreter.context))
-
         start_eval_time = None
 
-        s = prompt('> ', multiline=True, completer=name_completer)
+        s = prompt('> ',
+            multiline    = True,
+            completer    = name_completer,
+            history      = history,
+            style        = style,
+            auto_suggest = AutoSuggestFromHistory(),
+            get_bottom_toolbar_tokens = lambda cli: [(Token.Toolbar, toolbar_value)]
+        )
 
         if not s.strip():
             continue
@@ -48,9 +65,6 @@ def __repl(parser, interpreter):
         elif s == '\s':
             print('\n'.join(code_block))
             continue
-        elif s.startswith('\\t'):
-            start_eval_time = time.time()
-            s = s[2:]
         elif s == '\T':
             try:
                 print(ast.pretty())
@@ -72,23 +86,18 @@ def __repl(parser, interpreter):
         code_block = []
 
         try:
+            start_eval_time = time.time()
             retval = interpreter.eval(ast)
         except Exception as e:
             print("Error:", *e.args, "\n")
             continue
         else:
-            if retval: print(repr(retval))
+            toolbar_value = "time: {:0.4f} value: {}".format(time.time() - start_eval_time, retval)
             last = s
-            if start_eval_time is not None:
-                print("Runtime:", time.time() - start_eval_time)
+
 
 def repl(parser, interpreter):
-    print("Franz v0.0 (\h for help) Alt+Enter to complete an expression.")
-    # readline.set_completer(lambda text, state: [
-    #    c for c in sorted(interpreter.context) if c.startswith(text)
-    #][state])
-    # readline.parse_and_bind("tab: complete")
-
+    print("Franz v0.0 (\h for help)\nPress [Alt]+[Enter] to complete an expression.")
     while True:
         try:
             __repl(parser, interpreter)
