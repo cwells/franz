@@ -49,7 +49,7 @@ class ReplStyle(Style):
         Literal.String.Delimiter: '',
         Literal.String.Doc: '',
         Literal.String.Double: '',
-        Literal.String.Escape: '',
+        Literal.String.Escape: '#8a644a',
         Literal.String.Heredoc: '',
         Literal.String.Interpol: '#A5B288',
         Literal.String.Other: '',
@@ -78,7 +78,7 @@ class ReplStyle(Style):
         Name.Variable.Instance: '',
         Name.Variable.Magic: '',
         Operator: '#D4C99C',
-        Operator.Word: '#8E8474',
+        Operator.Word: '#B9C2AA',
         Other: '#556699',
         Punctuation: '#7D441D',
         Punctuation.Braces: '#C6C1A8',
@@ -108,7 +108,8 @@ class FranzLexer(RegexLexer):
 
         'double-quote': [
             (r'\{.*?\}', String.Interpol),
-            (r'[^"{}]+', String.Double),
+            (r'\\[nrt]', Literal.String.Escape),
+            (r'[^"{}\\]+', String.Double),
             (r'"', String.Double, '#pop'),
         ]
     }
