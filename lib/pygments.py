@@ -32,10 +32,10 @@ class ReplStyle(Style):
         Keyword.Namespace: '',
         Keyword.Pseudo: '',
         Keyword.Reserved: '#8F8575',
-        Keyword.Type: '#556699',
+        Keyword.Type: '#A0998D',
         Literal: '#A0998D',
         Literal.Date: '',
-        Literal.Number: '#B1ADA5',
+        Literal.Number: '#AF944F',
         Literal.Number.Bin: '',
         Literal.Number.Float: '',
         Literal.Number.Hex: '',
@@ -51,12 +51,12 @@ class ReplStyle(Style):
         Literal.String.Double: '',
         Literal.String.Escape: '',
         Literal.String.Heredoc: '',
-        Literal.String.Interpol: '#D5D5D5',
+        Literal.String.Interpol: '#A5B288',
         Literal.String.Other: '',
         Literal.String.Regex: '',
         Literal.String.Single: '',
         Literal.String.Symbol: '',
-        Name: '#565656 italic',
+        Name: '#529389 italic',
         Name.Attribute: '',
         Name.Builtin: '',
         Name.Builtin.Pseudo: '',
@@ -80,8 +80,8 @@ class ReplStyle(Style):
         Operator: '#D4C99C',
         Operator.Word: '#8E8474',
         Other: '#556699',
-        Punctuation: '#556699',
-        String.Double: '#AF944F',
+        Punctuation: '#7D441D',
+        String.Double: '#A0998D',
         Text: '#8C6B21',
         Text.Whitespace: ''
     }
@@ -101,6 +101,7 @@ class FranzLexer(RegexLexer):
                 bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved)),
             (r'\b[a-zA-Z][a-zA-Z0-9_!?\-%$]*\b', Name),
             (r'\s+([*+\-^=<>%/]+)\s+', Operator),
+            (r'[@().:;{}\[\]]', Punctuation)
         ],
 
         'double-quote': [

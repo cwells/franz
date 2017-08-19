@@ -24,8 +24,8 @@ ReplStyle.styles.update({
     # toolbar
     Token.Toolbar: '#ffffff bg:#333333',
     # prompt
-    Token.Prompt:       '#ffffff',
-    Token.Continuation: '#888888',
+    Token.Prompt:       '#444444',
+    Token.Continuation: '#333333',
 })
 
 def get_prompt_tokens(cli):
