@@ -81,6 +81,7 @@ class ReplStyle(Style):
         Operator.Word: '#8E8474',
         Other: '#556699',
         Punctuation: '#7D441D',
+        Punctuation.Braces: '#C6C1A8',
         String.Double: '#A0998D',
         Text: '#8C6B21',
         Text.Whitespace: ''
@@ -100,8 +101,9 @@ class FranzLexer(RegexLexer):
             (r'([a-zA-Z][a-zA-Z0-9_!?\-%$]*)(\s*)(=)(\s*)(fn)',
                 bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved)),
             (r'\b[a-zA-Z][a-zA-Z0-9_!?\-%$]*\b', Name),
-            (r'\s+([*+\-^=<>%/]+)\s+', Operator),
-            (r'[@().:;{}\[\]]', Punctuation)
+            (r'\s+([*+\-^=<>%/?]+)\s+', Operator),
+            (r'[@().,:;\[\]]', Punctuation),
+            (r'[{}]', Punctuation.Braces),
         ],
 
         'double-quote': [
