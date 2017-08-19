@@ -28,10 +28,10 @@ class FranzLexer(RegexLexer):
             (r'\b(if|else|for|while|in|to|fn|ⲗ|try|rescue|assert|include|yield|return|break|continue)\b', Keyword.Reserved),
             (r'\b(int|str|any|float|list|dict|bool)\b', Keyword.Type),
             (r'\b(and|or|not)\b', Operator.Word),
-            (r'\b([*+\-^=<>%/]+)\b', Operator),
             (r'#.*?$', Comment.Single),
             (r'([a-zA-Z][a-zA-Z0-9_!?\-%$]*)(\s*)(=)(\s*)(fn)',
-                bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved))
+                bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved)),
+            (r'\s+([*+\-^=<>%/]+)\s+', Operator),
         ],
 
         'double-quote': [
