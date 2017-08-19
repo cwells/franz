@@ -9,25 +9,23 @@ from prompt_toolkit.styles import style_from_dict
 from prompt_toolkit.token import Token
 from prompt_toolkit.layout.lexers import PygmentsLexer
 
-from pygments.style import Style
-from pygments.token import Token
-from pygments.styles.default import DefaultStyle
-
 from lark.common import UnexpectedToken
 from lark.lexer import UnexpectedInput
 
-from .pygments import FranzLexer
+from .pygments import FranzLexer, ReplStyle
 
-class ReplStyle(Style):
-    styles = {
-        Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-        Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-        Token.Menu.Completions.ProgressButton: 'bg:#003333',
-        Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
+ReplStyle.styles.update({
+    # menu
+    Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
+    Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
+    Token.Menu.Completions.ProgressButton: 'bg:#003333',
+    Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
+    # toolbar
+    Token.Toolbar: '#ffffff bg:#333333',
+})
 
-        Token.Toolbar: '#ffffff bg:#333333',
-    }
-    styles.update(DefaultStyle.styles)
+def get_continuation_tokens(cli, width):
+    return [(Token, '.' * (width - 1))]
 
 def __repl(parser, interpreter):
     history = InMemoryHistory()
@@ -36,7 +34,7 @@ def __repl(parser, interpreter):
     while True:
         name_completer = WordCompleter(sorted(interpreter.context))
 
-        code = prompt('> ',
+        code = prompt('>>> ',
             multiline     = True,
             completer     = name_completer,
             history       = history,
@@ -44,8 +42,9 @@ def __repl(parser, interpreter):
             mouse_support = True,
             lexer         = PygmentsLexer(FranzLexer),
             auto_suggest  = AutoSuggestFromHistory(),
+            on_abort      = AbortAction.RETRY,
             get_bottom_toolbar_tokens = lambda cli: [(Token.Toolbar, toolbar_value)],
-            on_abort      = AbortAction.RETRY
+            get_continuation_tokens   = get_continuation_tokens,
         )
 
         if not code.strip(): continue

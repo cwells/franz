@@ -1,25 +1,42 @@
 from pygments.lexer import RegexLexer, bygroups
-from pygments import token
+from pygments.style import Style
+from pygments.styles.default import DefaultStyle
+from pygments.styles.monokai import MonokaiStyle
+from pygments.token import (
+    Keyword, Name, Comment, String, Error,
+    Number, Operator, Generic, Whitespace
+)
+
+class ReplStyle(Style):
+    styles = {}
+    styles.update(MonokaiStyle.styles)
+    # styles.update({
+    #     Comment:        '#cedad2 italic',
+    #     Keyword:        '#9fb8bb bold',
+    #     Keyword.Type:   '#729ca8',
+    #     Operator:       '#9cae81 bold',
+    #     # Name.Function:  '#',
+    # })
 
 
 class FranzLexer(RegexLexer):
     name = 'Franz Lexer'
     tokens = {
         'root': [
-            (r'"', token.String.Double, 'double-quote'),
-            (r'[0-9]+(\.[0-9]+)?', token.Number),
-            (r'\b(if|else|for|while|in|to|fn|ⲗ|try|rescue|assert|include|yield|return|break|continue)\b', token.Keyword.Reserved),
-            (r'\b(int|str|any|float|list|dict|bool)\b', token.Keyword.Type),
-            (r'\b(and|or|not)\b', token.Operator.Word),
-            (r'\b([*+\-^=<>%/]+)\b', token.Operator),
-            (r'#.*?$', token.Comment.Single),
+            (r'"', String.Double, 'double-quote'),
+            (r'[0-9]+(\.[0-9]+)?', Number),
+            (r'\b(if|else|for|while|in|to|fn|ⲗ|try|rescue|assert|include|yield|return|break|continue)\b', Keyword.Reserved),
+            (r'\b(int|str|any|float|list|dict|bool)\b', Keyword.Type),
+            (r'\b(and|or|not)\b', Operator.Word),
+            (r'\b([*+\-^=<>%/]+)\b', Operator),
+            (r'#.*?$', Comment.Single),
             (r'([a-zA-Z][a-zA-Z0-9_!?\-%$]*)(\s*)(=)(\s*)(fn)',
-                bygroups(token.Name.Function, token.Whitespace, token.Operator, token.Whitespace, token.Keyword.Reserved))
+                bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved))
         ],
 
         'double-quote': [
-            (r'\{.*?\}', token.String.Interpol),
-            (r'[^"{}]+', token.String.Double),
-            (r'"', token.String.Double, '#pop'),
+            (r'\{.*?\}', String.Interpol),
+            (r'[^"{}]+', String.Double),
+            (r'"', String.Double, '#pop'),
         ]
     }

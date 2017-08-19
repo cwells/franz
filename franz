@@ -15,10 +15,8 @@ from lark.lexer import Token
 from lark.common import UnexpectedToken
 
 from lib.debug import trace, profile, debug
-try:
-    from lib.prompt_repl import repl
-except ImportError:
-    from lib.simple_repl import repl
+from lib.prompt_repl import repl
+# from lib.simple_repl import repl
 
 
 
