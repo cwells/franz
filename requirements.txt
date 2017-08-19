@@ -3,3 +3,5 @@ click>=6.6
 greenlet>=0.4.12
 memory-profiler>=0.47
 prompt_toolkit
+pygments
+
