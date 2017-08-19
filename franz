@@ -15,7 +15,11 @@ from lark.lexer import Token
 from lark.common import UnexpectedToken
 
 from lib.debug import trace, profile, debug
-from lib.repl import repl
+try:
+    from lib.prompt_repl import repl
+except ImportError:
+    from lib.simple_repl import repl
+
 
 
 GRAMMAR = 'grammars/franz.g'
@@ -61,7 +65,7 @@ class AstTransformer(InlineTransformer):
         return sig
 
     def chain(self, *args):
-        ''' converts form a(args) -> b -> c into form c(b(a(args)))
+        ''' converts form a(args)->b->c into form c(b(a(args)))
         '''
         first, args, *rest = args
         retval = Tree('call', [ first, args ])
