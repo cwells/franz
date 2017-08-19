@@ -23,11 +23,16 @@ ReplStyle.styles.update({
     Token.Menu.Completions.ProgressBar: 'bg:#00aaaa',
     # toolbar
     Token.Toolbar: '#ffffff bg:#333333',
+    # prompt
+    Token.Prompt:       '#ffffff',
+    Token.Continuation: '#888888',
 })
 
+def get_prompt_tokens(cli):
+    return [ (Token.Prompt, '>>> ') ]
 
 def get_continuation_tokens(cli, width):
-    return [(Token, '.' * (width - 1))]
+    return [(Token.Continuation, '.' * (width - 1))]
 
 def __repl(parser, interpreter):
     history = InMemoryHistory()
@@ -36,7 +41,7 @@ def __repl(parser, interpreter):
     while True:
         name_completer = WordCompleter(sorted(interpreter.context))
 
-        code = prompt('>>> ',
+        code = prompt (
             multiline     = True,
             completer     = name_completer,
             history       = history,
@@ -46,6 +51,7 @@ def __repl(parser, interpreter):
             auto_suggest  = AutoSuggestFromHistory(),
             on_abort      = AbortAction.RETRY,
             get_bottom_toolbar_tokens = lambda cli: [(Token.Toolbar, toolbar_value)],
+            get_prompt_tokens         = get_prompt_tokens,
             get_continuation_tokens   = get_continuation_tokens,
         )
 
