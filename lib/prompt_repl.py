@@ -1,6 +1,7 @@
 import time
 
 from prompt_toolkit import prompt
+from prompt_toolkit.contrib.completers import WordCompleter
 
 from lark.common import UnexpectedToken
 from lark.lexer import UnexpectedInput
@@ -23,9 +24,11 @@ def __repl(parser, interpreter):
     last = ''
 
     while True:
+        name_completer = WordCompleter(sorted(interpreter.context))
+
         start_eval_time = None
 
-        s = prompt('> ', multiline=True)
+        s = prompt('> ', multiline=True, completer=name_completer)
 
         if not s.strip():
             continue
