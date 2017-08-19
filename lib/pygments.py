@@ -6,7 +6,9 @@ from pygments.token import *
 
 
 class ReplStyle(Style):
-    styles = {
+    styles = {}
+    styles.update(DefaultStyle.styles)
+    styles.update({
         Comment: '#75715e',
         Comment.Hashbang: '',
         Comment.Multiline: '',
@@ -81,11 +83,10 @@ class ReplStyle(Style):
         Operator: '#f92672',
         Operator.Word: '',
         Other: '',
-        Punctuation: '#f8f8f2',
+        Punctuation: '#fefefe',
         Text: '#f8f8f2',
         Text.Whitespace: ''
-    }
-
+    })
 
 
 class FranzLexer(RegexLexer):
@@ -100,6 +101,7 @@ class FranzLexer(RegexLexer):
             (r'#.*?$', Comment.Single),
             (r'([a-zA-Z][a-zA-Z0-9_!?\-%$]*)(\s*)(=)(\s*)(fn)',
                 bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved)),
+            (r'\b[a-zA-Z][a-zA-Z0-9_!?\-%$]*\b', Name),
             (r'\s+([*+\-^=<>%/]+)\s+', Operator),
         ],
 
