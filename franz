@@ -15,9 +15,6 @@ from lark.lexer import Token
 from lark.common import UnexpectedToken
 
 from lib.debug import trace, profile, debug
-from lib.prompt_repl import repl
-# from lib.simple_repl import repl
-
 
 
 GRAMMAR = 'grammars/franz.g'
@@ -740,10 +737,11 @@ class Interpreter(object):
 
 @click.command()
 @click.argument('program', type=click.Path(exists=True), required=False, default=None)
-@click.option('--grammar', '-g', type=click.Path(exists=True), default='grammars/franz.g')
+@click.option('--grammar',   '-g', type=click.Path(exists=True), default='grammars/franz.g')
 @click.option('--dump-tree', '-d', is_flag=True)
 @click.option('--trace',     '-t', is_flag=True)
-def main(program, grammar, dump_tree, trace):
+@click.option('--repl-mode', '-r', type=click.Choice(['basic', 'fancy', 'b', 'f']), default='fancy')
+def main(program, grammar, dump_tree, trace, repl_mode):
     interpreter = Interpreter()
 
     if program is not None:
@@ -762,6 +760,11 @@ def main(program, grammar, dump_tree, trace):
             if dump_tree: print(ast.pretty())
 
     else:
+        if repl_mode[0] == 'f': # fancy
+            from lib.prompt_repl import repl
+        else:                   # basic
+            from lib.simple_repl import repl
+
         repl(parser, interpreter)
 
 if __name__ == '__main__':
