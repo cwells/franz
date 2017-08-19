@@ -83,7 +83,7 @@ def __repl(parser, interpreter):
                 print("Runtime:", time.time() - start_eval_time)
 
 def repl(parser, interpreter):
-    print("Franz v0.0 (\h for help)")
+    print("Franz v0.0 (\h for help) Alt+Enter to complete an expression.")
     # readline.set_completer(lambda text, state: [
     #    c for c in sorted(interpreter.context) if c.startswith(text)
     #][state])
