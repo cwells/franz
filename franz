@@ -737,10 +737,10 @@ class Interpreter(object):
 
 @click.command()
 @click.argument('program', type=click.Path(exists=True), required=False, default=None)
-@click.option('--grammar',   '-g', type=click.Path(exists=True), default='grammars/franz.g')
-@click.option('--dump-tree', '-d', is_flag=True)
-@click.option('--trace',     '-t', is_flag=True)
-@click.option('--repl-mode', '-r', type=click.Choice(['basic', 'fancy', 'b', 'f']), default='fancy')
+@click.option('--grammar',    '-g', type=click.Path(exists=True), default='grammars/franz.g')
+@click.option('--dump-tree',  '-d', is_flag=True)
+@click.option('--trace',      '-t', is_flag=True)
+@click.option('--repl-mode',  '-r', type=click.Choice(['basic', 'fancy', 'b', 'f']), default='fancy')
 def main(program, grammar, dump_tree, trace, repl_mode):
     interpreter = Interpreter()
 
@@ -764,6 +764,7 @@ def main(program, grammar, dump_tree, trace, repl_mode):
             from lib.prompt_repl import repl
         else:                   # basic
             from lib.simple_repl import repl
+            Style = None
 
         repl(parser, interpreter)
 

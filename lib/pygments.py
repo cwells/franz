@@ -1,22 +1,91 @@
 from pygments.lexer import RegexLexer, bygroups
 from pygments.style import Style
 from pygments.styles.default import DefaultStyle
-from pygments.styles.monokai import MonokaiStyle
-from pygments.token import (
-    Keyword, Name, Comment, String, Error,
-    Number, Operator, Generic, Whitespace
-)
+
+from pygments.token import *
+
 
 class ReplStyle(Style):
-    styles = {}
-    styles.update(MonokaiStyle.styles)
-    # styles.update({
-    #     Comment:        '#cedad2 italic',
-    #     Keyword:        '#9fb8bb bold',
-    #     Keyword.Type:   '#729ca8',
-    #     Operator:       '#9cae81 bold',
-    #     # Name.Function:  '#',
-    # })
+    styles = {
+        Comment: '#75715e',
+        Comment.Hashbang: '',
+        Comment.Multiline: '',
+        Comment.Preproc: '',
+        Comment.PreprocFile: '',
+        Comment.Single: '',
+        Comment.Special: '',
+        Error: '#960050 bg:#1e0010',
+        Escape: '',
+        Generic: '',
+        Generic.Deleted: '#f92672',
+        Generic.Emph: 'italic',
+        Generic.Error: '',
+        Generic.Heading: '',
+        Generic.Inserted: '#a6e22e',
+        Generic.Output: '',
+        Generic.Prompt: '',
+        Generic.Strong: 'bold',
+        Generic.Subheading: '#75715e',
+        Generic.Traceback: '',
+        Keyword: '#66d9ef',
+        Keyword.Constant: '',
+        Keyword.Declaration: '',
+        Keyword.Namespace: '#f92672',
+        Keyword.Pseudo: '',
+        Keyword.Reserved: '',
+        Keyword.Type: '',
+        Literal: '#ae81ff',
+        Literal.Date: '#e6db74',
+        Literal.Number: '#ae81ff',
+        Literal.Number.Bin: '',
+        Literal.Number.Float: '',
+        Literal.Number.Hex: '',
+        Literal.Number.Integer: '',
+        Literal.Number.Integer.Long: '',
+        Literal.Number.Oct: '',
+        Literal.String: '#e6db74',
+        Literal.String.Affix: '',
+        Literal.String.Backtick: '',
+        Literal.String.Char: '',
+        Literal.String.Delimiter: '',
+        Literal.String.Doc: '',
+        Literal.String.Double: '',
+        Literal.String.Escape: '#ae81ff',
+        Literal.String.Heredoc: '',
+        Literal.String.Interpol: '',
+        Literal.String.Other: '',
+        Literal.String.Regex: '',
+        Literal.String.Single: '',
+        Literal.String.Symbol: '',
+        Name: '#f8f8f2',
+        Name.Attribute: '#a6e22e',
+        Name.Builtin: '',
+        Name.Builtin.Pseudo: '',
+        Name.Class: '#a6e22e',
+        Name.Constant: '#66d9ef',
+        Name.Decorator: '#a6e22e',
+        Name.Entity: '',
+        Name.Exception: '#a6e22e',
+        Name.Function: '#a6e22e',
+        Name.Function.Magic: '',
+        Name.Label: '',
+        Name.Namespace: '',
+        Name.Other: '#a6e22e',
+        Name.Property: '',
+        Name.Tag: '#f92672',
+        Name.Variable: '',
+        Name.Variable.Class: '',
+        Name.Variable.Global: '',
+        Name.Variable.Instance: '',
+        Name.Variable.Magic: '',
+        Operator: '#f92672',
+        Operator.Word: '',
+        Other: '',
+        Punctuation: '#f8f8f2',
+        Text: '#f8f8f2',
+        Text.Whitespace: ''
+    }
+
 
 
 class FranzLexer(RegexLexer):

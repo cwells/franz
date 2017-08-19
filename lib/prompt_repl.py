@@ -14,6 +14,7 @@ from lark.lexer import UnexpectedInput
 
 from .pygments import FranzLexer, ReplStyle
 
+
 ReplStyle.styles.update({
     # menu
     Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
@@ -23,6 +24,7 @@ ReplStyle.styles.update({
     # toolbar
     Token.Toolbar: '#ffffff bg:#333333',
 })
+
 
 def get_continuation_tokens(cli, width):
     return [(Token, '.' * (width - 1))]
@@ -66,6 +68,7 @@ def __repl(parser, interpreter):
 
 def repl(parser, interpreter):
     print("Franz v0.0\n")
+
     while True:
         try:
             __repl(parser, interpreter)
