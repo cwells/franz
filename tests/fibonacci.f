@@ -31,7 +31,7 @@ rescue errors += 1
 # faster, non-recursive function
 #
 fibonacci-sequence = fn (n: int) {
-    a = b = 1
+    a = b = 1;
     for i in 3 to n + 2
         (a, b) = (b, (yield a) + b);
 }

@@ -1,17 +1,34 @@
 from pygments.lexer import RegexLexer, bygroups
 from pygments.style import Style
-
 from pygments.token import *
 
+from .termcolors import termcolors
+
+COMMENT = "%(Grey27)s" % termcolors
+KEYWORD = "%(PaleTurquoise4)s" % termcolors
+TYPE = "%(SlateBlue3)s" % termcolors
+LITERAL = "%(Grey85)s" % termcolors
+NAME = "%(Plum4)s italic" % termcolors
+FUNCTION = "%(SteelBlue)s italic" % termcolors
+FUNCTION_DEF = "%(SteelBlue3)s italic" % termcolors
+NUMBER = "%(Silver)s" % termcolors
+STRING = "%(Grey)s" % termcolors
+STRING_ESCAPE = "%(DarkRed)s" % termcolors
+STRING_INTERPOL = NAME
+OPERATOR = "%(Orange4)s" % termcolors
+OPERATOR_WORD = "%(Orange4)s" % termcolors
+PUNCTUATION = "%(Grey42)s" % termcolors
+BRACES = "%(Grey50)s" % termcolors
+TEXT = "%(Grey46)s" % termcolors
 
 class ReplStyle(Style):
     styles = {
-        Comment: '#602222',
+        Comment: COMMENT,
         Comment.Hashbang: '',
         Comment.Multiline: '',
         Comment.Preproc: '',
         Comment.PreprocFile: '',
-        Comment.Single: '#602222',
+        Comment.Single: COMMENT,
         Comment.Special: '',
         Error: '#960050 bg:#1e0010',
         Escape: '',
@@ -26,37 +43,37 @@ class ReplStyle(Style):
         Generic.Strong: 'bold',
         Generic.Subheading: '',
         Generic.Traceback: '',
-        Keyword: '#7DA182',
+        Keyword: KEYWORD,
         Keyword.Constant: '',
         Keyword.Declaration: '',
         Keyword.Namespace: '',
         Keyword.Pseudo: '',
-        Keyword.Reserved: '#7DA182',
-        Keyword.Type: '#A0998D',
-        Literal: '#A0998D',
+        Keyword.Reserved: KEYWORD,
+        Keyword.Type: TYPE,
+        Literal: LITERAL,
         Literal.Date: '',
-        Literal.Number: '#AF944F',
+        Literal.Number: NUMBER,
         Literal.Number.Bin: '',
         Literal.Number.Float: '',
         Literal.Number.Hex: '',
         Literal.Number.Integer: '',
         Literal.Number.Integer.Long: '',
         Literal.Number.Oct: '',
-        Literal.String: '#C2C1BD',
+        Literal.String: STRING,
         Literal.String.Affix: '',
         Literal.String.Backtick: '',
         Literal.String.Char: '',
         Literal.String.Delimiter: '',
         Literal.String.Doc: '',
         Literal.String.Double: '',
-        Literal.String.Escape: '#8a644a',
+        Literal.String.Escape: STRING_ESCAPE,
         Literal.String.Heredoc: '',
-        Literal.String.Interpol: '#529389 italic',
+        Literal.String.Interpol: STRING_INTERPOL,
         Literal.String.Other: '',
         Literal.String.Regex: '',
         Literal.String.Single: '',
         Literal.String.Symbol: '',
-        Name: '#529389 italic',
+        Name: NAME,
         Name.Attribute: '',
         Name.Builtin: '',
         Name.Builtin.Pseudo: '',
@@ -65,7 +82,8 @@ class ReplStyle(Style):
         Name.Decorator: '',
         Name.Entity: '',
         Name.Exception: '',
-        Name.Function: '#7D441D',
+        Name.Function: FUNCTION,
+        Name.Function.Definition: FUNCTION_DEF,
         Name.Function.Magic: '',
         Name.Label: '',
         Name.Namespace: '',
@@ -77,13 +95,13 @@ class ReplStyle(Style):
         Name.Variable.Global: '',
         Name.Variable.Instance: '',
         Name.Variable.Magic: '',
-        Operator: '#D4C99C',
-        Operator.Word: '#B9C2AA',
-        Other: '#556699',
-        Punctuation: '#7D441D',
-        Punctuation.Braces: '#C6C1A8',
-        String.Double: '#A0998D',
-        Text: '#8C6B21',
+        Operator: OPERATOR,
+        Operator.Word: OPERATOR_WORD,
+        Other: '',
+        Punctuation: PUNCTUATION,
+        Punctuation.Braces: BRACES,
+        String.Double: STRING,
+        Text: TEXT,
         Text.Whitespace: ''
     }
 
@@ -99,7 +117,8 @@ class FranzLexer(RegexLexer):
             (r'\b(and|or|not)\b', Operator.Word),
             (r'#.*?$', Comment.Single),
             (r'([a-zA-Z][a-zA-Z0-9_!?\-%$]*)(\s*)(=)(\s*)(fn)',
-                bygroups(Name.Function, Whitespace, Operator, Whitespace, Keyword.Reserved)),
+                bygroups(Name.Function.Definition, Whitespace, Operator, Whitespace, Keyword.Reserved)),
+            (r'\b([a-zA-Z][a-zA-Z0-9_!?\-%$]*)(\s*)([(])', bygroups(Name.Function, Whitespace, Punctuation)),
             (r'\b[a-zA-Z][a-zA-Z0-9_!?\-%$]*\b', Name),
             (r'\s+([*+\-^=<>%/?]+)\s+', Operator),
             (r'[@().,:;\[\]]', Punctuation),
