@@ -108,7 +108,7 @@ class FranzLexer(RegexLexer):
 
         'double-quote': [
             (r'\{.*?\}', String.Interpol),
-            (r'\\[nrt]', Literal.String.Escape),
+            (r'\\.', Literal.String.Escape),
             (r'[^"{}\\]+', String.Double),
             (r'"', String.Double, '#pop'),
         ]

@@ -68,7 +68,7 @@ def __repl(parser, interpreter):
             toolbar_value = "Error: %s" % e.args
             continue
         else:
-            toolbar_value = "time: {:0.4f} value: {}".format(time.time() - start_eval_time, str(retval))
+            toolbar_value = "Time: {:0.4f}, Value: {}".format(time.time() - start_eval_time, str(retval))
 
 
 def repl(parser, interpreter):
