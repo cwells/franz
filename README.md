@@ -18,7 +18,8 @@ e.g. `a - 1` is subtraction, whereas `a-1` is a variable or function named "a-1"
 you to use characters such as `-` or `?` as part of a variable or function name.
 
 `./franz` will accept a filename containing Franz source on the command line or 
-start a simple REPL if no file is provided.
+start a REPL if no file is provided. The REPL is built using [prompt_toolkit](https://github.com/jonathanslenders/python-prompt-toolkit)
+and [pygments](http://pygments.org/).
 
 Here's a recursive implementation of a Fibonacci sequence. This is an elegant, but inefficient algorithm. 
 Calculating 25 numbers takes 13.28s on my computer. 
