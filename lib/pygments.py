@@ -51,7 +51,7 @@ class ReplStyle(Style):
         Literal.String.Double: '',
         Literal.String.Escape: '#8a644a',
         Literal.String.Heredoc: '',
-        Literal.String.Interpol: '#A5B288',
+        Literal.String.Interpol: '#529389 italic',
         Literal.String.Other: '',
         Literal.String.Regex: '',
         Literal.String.Single: '',
