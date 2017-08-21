@@ -1,5 +1,4 @@
 import time
-import getpass
 
 from prompt_toolkit import prompt, AbortAction
 from prompt_toolkit.contrib.completers import WordCompleter
@@ -36,7 +35,7 @@ def get_continuation_tokens(cli, width):
 
 def __repl(parser, interpreter):
     history = InMemoryHistory()
-    toolbar_value = 'Hello, %s. Press [Alt]+[Enter] to evaluate an expression.' % getpass.getuser()
+    toolbar_value = 'Press [Alt]+[Enter] to evaluate an expression.'
 
     while True:
         name_completer = WordCompleter(sorted(interpreter.context))
@@ -69,7 +68,7 @@ def __repl(parser, interpreter):
             toolbar_value = "Error: %s" % e.args
             continue
         else:
-            toolbar_value = "time: {:0.4f} value: {}".format(time.time() - start_eval_time, retval)
+            toolbar_value = "time: {:0.4f} value: {}".format(time.time() - start_eval_time, str(retval))
 
 
 def repl(parser, interpreter):
