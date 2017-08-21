@@ -104,6 +104,7 @@ class FranzLexer(RegexLexer):
             (r'\s+([*+\-^=<>%/?]+)\s+', Operator),
             (r'[@().,:;\[\]]', Punctuation),
             (r'[{}]', Punctuation.Braces),
+            (r'\s+', Whitespace)
         ],
 
         'double-quote': [
