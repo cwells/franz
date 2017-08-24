@@ -15,6 +15,7 @@ from lark.lexer import Token
 from lark.common import UnexpectedToken
 
 from lib.debug import trace, profile, debug
+from lib.pygments import repl_styles
 
 
 GRAMMAR = 'grammars/franz.g'
@@ -81,15 +82,16 @@ except:
 
 
 class Function(object):
-    def __init__(self, name, signature, code, context, yield_to):
+    def __init__(self, name, signature, code, context):
         self.name = name
         self.signature = signature
         self.code = code
         self.context = {}
         self.context.update(context)
-        self.yield_to = yield_to
+        self.yield_to = None
 
-    def prepare(self):
+    def prepare(self, yield_to):
+        self.yield_to = yield_to
         # because Interpreter isn't defined til later
         self.interpreter = Interpreter(context=self.context)
         self.interpreter.yield_expr = self.yield_expr # monkey-patch interpreter
@@ -106,6 +108,8 @@ class Function(object):
     @debug
     def yield_expr(self, ast):
         item = self.interpreter.eval(ast)
+        # print("%s:item" % self.name, item)
+        print("%s:switch" % self.name, self.yield_to)
         self.yield_to.switch(item) # jump to call method
         return item
 
@@ -378,6 +382,8 @@ class Interpreter(object):
         name, args = str(ast[0]), ast[1:]
         pargs = [] # positional args
         nargs = {} # named args
+
+        # interpreter = Interpreter(context=self.context)
         aargs = [ self.eval(a) if isinstance(a, Tree) else a for a in args ]
         try:
             pargs, nargs = aargs[0]
@@ -387,10 +393,13 @@ class Interpreter(object):
         @profile
         @trace
         @debug
-        def switch_handler(item):
+        def switch_handler(fn_greenlet, item):
             while not fn_greenlet.dead:
+                # print("switch_handler:item", item)
                 yield item
+                print("switch_handler:switch", fn_greenlet)
                 item = fn_greenlet.switch()
+            raise StopIteration
 
         @profile
         @trace
@@ -403,15 +412,18 @@ class Interpreter(object):
 
         if name in self.context: # user-defined function
             defn = self.context[name]
-            yield_to = greenlet(switch_handler)
-            fn = Function(name, defn.signature, defn.code, self.context, yield_to)
-            fn.prepare()
+            fn = Function(name, defn.signature, defn.code, self.context)
             args = validate(fn.signature, pargs=pargs, nargs=nargs)
-            fn_greenlet = greenlet(partial(catch_return, fn, **args))
+            fn_greenlet = greenlet(partial(fn, **args))
+            yield_to = greenlet(partial(switch_handler, fn_greenlet))
+            fn.prepare(yield_to)
             return fn_greenlet.switch()
 
         else: # builtin function
-            fn = getattr(self, 'fn_' + name)
+            try:
+                fn = getattr(self, 'fn_' + name)
+            except AttributeError:
+                raise NameError(name)
             return fn(*pargs, **nargs)
 
 
@@ -553,7 +565,7 @@ class Interpreter(object):
         except ValueError:
             block = ast[0]
             signature = {}
-        return Function(None, signature, block, context={}, yield_to=None)
+        return Function(None, signature, block, context={})
 
     @profile
     @trace
@@ -741,7 +753,8 @@ class Interpreter(object):
 @click.option('--dump-tree',  '-d', is_flag=True)
 @click.option('--trace',      '-t', is_flag=True)
 @click.option('--repl-mode',  '-r', type=click.Choice(['basic', 'fancy', 'b', 'f']), default='fancy')
-def main(program, grammar, dump_tree, trace, repl_mode):
+@click.option('--repl-style', '-s', type=click.Choice(sorted(repl_styles.keys())), default='default')
+def main(program, grammar, dump_tree, trace, repl_mode, repl_style):
     interpreter = Interpreter()
 
     if program is not None:
@@ -764,9 +777,8 @@ def main(program, grammar, dump_tree, trace, repl_mode):
             from lib.prompt_repl import repl
         else:                   # basic
             from lib.simple_repl import repl
-            Style = None
 
-        repl(parser, interpreter)
+        repl(parser, interpreter, repl_style)
 
 if __name__ == '__main__':
     main()
