@@ -1,19 +1,20 @@
 import importlib
 
 from pygments.lexer import RegexLexer, bygroups
-from pygments.style import Style
 from pygments.styles import STYLE_MAP
 from pygments.token import *
+
 
 def load_style(full_class_string):
     modulename, styleclass = full_class_string.split('::')
     module = importlib.import_module("pygments.styles." + modulename)
     return getattr(module, styleclass)
 
-# probably don't need to preload all styles...
+
 repl_styles = {}
 for name, import_info in STYLE_MAP.items():
     repl_styles[name] = load_style(import_info)
+    repl_styles[name].styles[Whitespace] = '' # some styles underline ws
 
 
 class FranzLexer(RegexLexer):
