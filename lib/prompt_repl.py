@@ -1,8 +1,11 @@
+import os
 import time
+from pprint import pprint
+from pathlib import Path
 
 from prompt_toolkit import prompt, AbortAction
 from prompt_toolkit.contrib.completers import WordCompleter
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.styles import style_from_dict
 from prompt_toolkit.token import Token
@@ -33,9 +36,11 @@ def get_prompt_tokens(cli):
 def get_continuation_tokens(cli, width):
     return [(Token.Continuation, '.' * (width - 1))]
 
-def __repl(parser, interpreter):
-    history = InMemoryHistory()
-    toolbar_value = 'Press [Alt]+[Enter] to evaluate an expression.'
+def repl(parser, interpreter):
+    print("Franz v0.0\n")
+    history_file = os.path.join(str(Path.home()), '.franz-history')
+    history = FileHistory(history_file)
+    toolbar_value = 'Press [Alt+Enter] to evaluate an expression. [Ctrl+d] to exit. History saved in %s.' % history_file
 
     while True:
         name_completer = WordCompleter(sorted(interpreter.context))
@@ -45,20 +50,29 @@ def __repl(parser, interpreter):
             completer     = name_completer,
             history       = history,
             style         = ReplStyle,
-            mouse_support = True,
+            mouse_support = False,
             lexer         = PygmentsLexer(FranzLexer),
             auto_suggest  = AutoSuggestFromHistory(),
             on_abort      = AbortAction.RETRY,
+            patch_stdout  = True,
+            true_color    = True,
             get_bottom_toolbar_tokens = lambda cli: [(Token.Toolbar, toolbar_value)],
             get_prompt_tokens         = get_prompt_tokens,
             get_continuation_tokens   = get_continuation_tokens,
         )
 
         if not code.strip(): continue
+        if code == '\\v':
+            pprint(interpreter.context)
+            continue
 
         try:
             ast = parser.parse(code)
-        except (UnexpectedToken, UnexpectedInput):
+        except UnexpectedToken as e:
+            toolbar_value = str(e)
+            continue
+        except UnexpectedInput as e:
+            toolbar_value = str(e)
             continue
 
         try:
@@ -71,11 +85,3 @@ def __repl(parser, interpreter):
             toolbar_value = "Time: {:0.4f}, Value: {}".format(time.time() - start_eval_time, str(retval))
 
 
-def repl(parser, interpreter):
-    print("Franz v0.0\n")
-
-    while True:
-        try:
-            __repl(parser, interpreter)
-        except KeyboardInterrupt:
-            continue
