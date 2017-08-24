@@ -397,7 +397,7 @@ class Interpreter(object):
         @debug
         def catch_return(fn, **kwargs):
             try:
-                return fn(*args, **kwargs)
+                return fn(**kwargs) # call user-defined function
             except ReturnException as e:
                 return e.value
 
