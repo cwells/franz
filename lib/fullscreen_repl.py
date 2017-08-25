@@ -24,13 +24,6 @@ from pygments.styles import get_style_by_name
 
 from .pygments import FranzLexer
 
-
-layout = HSplit([
-    Window(content=BufferControl(buffer_name=DEFAULT_BUFFER, lexer=PygmentsLexer(FranzLexer))),
-    Window(height=D.exact(1), content=FillControl(u"\u2015", token=Token.Line)),
-    Window(content=BufferControl(buffer_name='RESULT')),
-])
-
 def get_titlebar_tokens(cli):
     return [
         (Token.Title, ' Franz 0.0 '),
@@ -38,26 +31,25 @@ def get_titlebar_tokens(cli):
     ]
 
 layout = HSplit([
+    Window(content=BufferControl(buffer_name=DEFAULT_BUFFER, lexer=PygmentsLexer(FranzLexer))),
+    Window(height=D.exact(1), content=FillControl(u"\u2015", token=Token.Line)),
+    Window(content=BufferControl(buffer_name='RESULT')),
+])
+
+layout = HSplit([
     Window(height=D.exact(1), content=TokenListControl(get_titlebar_tokens, align_center=True)),
     Window(height=D.exact(1), content=FillControl(u"\u2015", token=Token.Line)),
     layout,
 ])
 
-registry = load_key_bindings()
-
-@registry.add_binding(Keys.ControlC, eager=True)
-@registry.add_binding(Keys.ControlQ, eager=True)
-def _(event):
-    event.cli.set_return_value(None)
-
-buffers = {
-    DEFAULT_BUFFER: Buffer(is_multiline=True),
-    'RESULT': Buffer(is_multiline=True),
-}
 
 def repl(parser, interpreter, style_name='default'):
+    registry = load_key_bindings()
+
     @registry.add_binding(Keys.Escape, Keys.Enter) # meta-enter/alt-enter
     def _(event):
+        '''Evaluate the buffer
+        '''
         code = buffers[DEFAULT_BUFFER].text
         try:
             ast = parser.parse(code)
@@ -75,6 +67,17 @@ def repl(parser, interpreter, style_name='default'):
             buffers['RESULT'].text = str(retval)
             toolbar_value = "Time: {:0.4f}, Value: {}".format(time.time() - start_eval_time, str(retval))
 
+    @registry.add_binding(Keys.ControlC, eager=True)
+    @registry.add_binding(Keys.ControlQ, eager=True)
+    def _(event):
+        '''Exit the REPL
+        '''
+        event.cli.set_return_value(None)
+
+    buffers = {
+        DEFAULT_BUFFER: Buffer(is_multiline=True),
+        'RESULT': Buffer(is_multiline=True),
+    }
     style = style_from_pygments(get_style_by_name(style_name))
 
     application = Application(
