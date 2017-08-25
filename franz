@@ -109,7 +109,7 @@ class Function(object):
     def yield_expr(self, ast):
         item = self.interpreter.eval(ast)
         # print("%s:item" % self.name, item)
-        print("%s:switch" % self.name, self.yield_to)
+        # print("%s:switch" % self.name, self.yield_to)
         self.yield_to.switch(item) # jump to call method
         return item
 
@@ -397,7 +397,7 @@ class Interpreter(object):
             while not fn_greenlet.dead:
                 # print("switch_handler:item", item)
                 yield item
-                print("switch_handler:switch", fn_greenlet)
+                # print("switch_handler:switch", fn_greenlet)
                 item = fn_greenlet.switch()
             raise StopIteration
 
@@ -752,7 +752,7 @@ class Interpreter(object):
 @click.option('--grammar',    '-g', type=click.Path(exists=True), default='grammars/franz.g')
 @click.option('--dump-tree',  '-d', is_flag=True)
 @click.option('--trace',      '-t', is_flag=True)
-@click.option('--repl-mode',  '-r', type=click.Choice(['basic', 'fancy', 'b', 'f']), default='fancy')
+@click.option('--repl-mode',  '-r', type=click.Choice(['basic', 'advanced', 'fullscreen', 'b', 'a', 'f']), default='advanced')
 @click.option('--repl-style', '-s', type=click.Choice(sorted(repl_styles.keys())), default='default')
 def main(program, grammar, dump_tree, trace, repl_mode, repl_style):
     interpreter = Interpreter()
@@ -773,9 +773,11 @@ def main(program, grammar, dump_tree, trace, repl_mode, repl_style):
             if dump_tree: print(ast.pretty())
 
     else:
-        if repl_mode[0] == 'f': # fancy
+        if repl_mode[0] == 'a':    # advanced
             from lib.prompt_repl import repl
-        else:                   # basic
+        elif repl_mode[0] == 'f':  # fullscreen
+            from lib.fullscreen_repl import repl
+        else:
             from lib.simple_repl import repl
 
         repl(parser, interpreter, repl_style)
